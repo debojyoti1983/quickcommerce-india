@@ -1,0 +1,28 @@
+# Render blueprint — https://render.com/docs/blueprint-spec
+# In Render: New + → Blueprint → connect this repo. It reads this file.
+services:
+  - type: web
+    name: quickcommerce-india
+    runtime: docker
+    plan: starter            # has persistent disk support; free plan has none
+    healthCheckPath: /healthz
+    autoDeploy: true
+    disk:
+      name: data
+      mountPath: /app/data   # auth.db persists here across deploys
+      sizeGB: 1
+    envVars:
+      # Secret signing key — generated once by Render, kept out of the repo.
+      - key: QC_SESSION_SECRET
+        generateValue: true
+      # Persist the SQLite DB on the mounted disk.
+      - key: QC_AUTH_DB_PATH
+        value: /app/data/auth.db
+      # Production hardening.
+      - key: QC_COOKIE_SECURE
+        value: "true"
+      - key: QC_EXPOSE_DEMO_OTP
+        value: "false"
+      # LLM key — set this yourself in the dashboard (do NOT commit it).
+      - key: QC_ANTHROPIC_API_KEY
+        sync: false

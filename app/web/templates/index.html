@@ -1,0 +1,383 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>QuickCommerce India — compare & decide</title>
+  <style>
+    :root {
+      --bg: #0f0d0a; --panel: #1a1410; --line: #3a2f1e; --ink: #e8dcc0;
+      --muted: #a8997a; --accent: #f0a030; --good: #4caf50; --warn: #e57373; --blue: #9bb8ff;
+    }
+    * { box-sizing: border-box; }
+    body { margin: 0; font: 15px/1.5 system-ui, sans-serif; background: var(--bg); color: var(--ink); }
+    header { padding: 22px 20px; border-bottom: 1px solid var(--line); position: relative; }
+    h1 { margin: 0; font-size: 20px; }
+    .authbar { position: absolute; top: 22px; right: 20px; font-size: 13px; color: var(--muted); }
+    .authbar a { color: var(--accent); text-decoration: none; }
+    .authbar button { background: transparent; border: 1px solid var(--line); color: var(--muted); border-radius: 6px; padding: 3px 9px; font-size: 12px; cursor: pointer; margin-left: 8px; }
+    .authbar button:hover { border-color: var(--accent); color: var(--accent); }
+    .tagline { color: var(--accent); font-size: 15px; font-weight: 600; margin-top: 6px; letter-spacing: .2px; }
+    .sub { color: var(--muted); font-size: 13px; margin-top: 4px; }
+    main { max-width: 920px; margin: 0 auto; padding: 20px; }
+    form { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 16px; display: grid; gap: 12px; }
+    .row { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+    input[type=text], input[type=number] { background: #0c0a07; color: var(--ink); border: 1px solid var(--line); border-radius: 8px; padding: 10px 12px; font-size: 15px; }
+    #query { flex: 1; min-width: 220px; }
+    label.chk { display: inline-flex; gap: 6px; align-items: center; color: var(--muted); font-size: 14px; }
+    button { background: var(--accent); color: #1a1006; border: 0; border-radius: 8px; padding: 10px 18px; font-weight: 600; cursor: pointer; }
+    button.ghost { background: transparent; color: var(--accent); border: 1px solid var(--accent); }
+    .hint { color: var(--muted); font-size: 12px; }
+    .card { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 16px; margin-top: 16px; }
+    .best { border-color: var(--accent); }
+    .badge { display: inline-block; font-size: 11px; padding: 2px 8px; border-radius: 999px; border: 1px solid var(--line); color: var(--muted); margin-left: 6px; }
+    .badge.claude { color: var(--accent); border-color: var(--accent); }
+    table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 14px; }
+    th, td { text-align: left; padding: 8px 6px; border-bottom: 1px solid var(--line); }
+    th { color: var(--muted); font-weight: 500; }
+    .tag { font-size: 11px; padding: 1px 6px; border-radius: 4px; background: #2a1e0c; color: var(--accent); }
+    .conf-high { color: var(--good); } .conf-medium { color: var(--accent); } .conf-low { color: var(--warn); }
+    .meta { color: var(--muted); font-size: 12px; margin-top: 8px; }
+    .orderbanner { background: #12210f; border: 1px solid var(--good); border-radius: 10px; padding: 14px 16px; margin-bottom: 4px; }
+    .orderbanner .oid { color: var(--good); font-weight: 700; }
+    .orderbanner .x { float: right; cursor: pointer; color: var(--muted); }
+    code { background:#2a1e0c; padding:1px 5px; border-radius:4px; color: var(--accent); }
+    .abstain { color: var(--warn); }
+    dialog { background: var(--panel); color: var(--ink); border: 1px solid var(--accent); border-radius: 10px; max-width: 460px; }
+
+    /* --- markdown narration --- */
+    .narr { margin-top: 10px; }
+    .narr p { margin: 6px 0; }
+    .narr ul, .narr ol { margin: 6px 0 6px 20px; }
+    .narr li { margin: 2px 0; }
+    .narr strong { color: var(--ink); }
+
+    /* --- special callout blocks --- */
+    .block { border-left: 3px solid var(--line); background: #140f0a; border-radius: 6px; padding: 10px 12px; margin-top: 10px; }
+    .block .blabel { display: inline-block; font-size: 10px; letter-spacing: .08em; font-weight: 700; padding: 2px 8px; border-radius: 999px; margin-bottom: 4px; }
+    .block ul { margin: 6px 0 0 18px; } .block li { margin: 3px 0; }
+    .block.because { border-left-color: var(--accent); }
+    .block.because .blabel { background: #2a1e0c; color: var(--accent); }
+    .block.evidence { border-left-color: var(--blue); }
+    .block.evidence .blabel { background: #16203a; color: var(--blue); }
+    .evsub { color: var(--muted); font-size: 12px; margin-left: 4px; }
+    .evrow { margin-top: 8px; }
+    .evhead { font-size: 13px; color: var(--ink); }
+    .evsrc { color: var(--blue); font-size: 11px; border: 1px solid #2a3a5a; border-radius: 4px; padding: 1px 6px; margin-left: 4px; }
+    .evfresh { color: var(--muted); font-size: 11px; margin-left: 4px; }
+    .evfacts { margin-top: 6px; display: flex; flex-wrap: wrap; gap: 6px; }
+    .evchip { font-size: 12px; background: #16203a; color: #cdd9f5; border-radius: 6px; padding: 2px 9px; }
+    .evaudit { margin-top: 10px; }
+    .evaudit summary { color: var(--muted); font-size: 11px; cursor: pointer; }
+    .evaudit ul { margin: 6px 0 0 18px; font-family: ui-monospace, Consolas, monospace; font-size: 11px; color: var(--muted); }
+    .block.confidence.high { border-left-color: var(--good); }
+    .block.confidence.medium { border-left-color: var(--accent); }
+    .block.confidence.low { border-left-color: var(--warn); }
+    .block.confidence .blabel { background: #14210f; color: var(--good); }
+    .conf-bar { height: 8px; border-radius: 4px; background: #2a2014; overflow: hidden; margin-top: 8px; max-width: 260px; }
+    .conf-bar > i { display: block; height: 100%; }
+    .tagk { font-weight: 700; font-size: 11px; padding: 1px 6px; border-radius: 4px; background: #2a1e0c; color: var(--accent); }
+
+    /* --- option rows (memberships + platform filter) --- */
+    .opts { gap: 10px 14px; }
+    .optlabel { color: var(--muted); font-size: 13px; min-width: 92px; font-weight: 600; }
+    .linkbtn { background: transparent; color: var(--muted); border: 1px solid var(--line); padding: 2px 9px; font-size: 12px; font-weight: 500; border-radius: 6px; }
+    .linkbtn:hover { color: var(--accent); border-color: var(--accent); }
+  </style>
+</head>
+<body>
+  <header>
+    <div id="authbar" class="authbar"><a href="/login">Log in</a></div>
+    <h1>QuickCommerce India <span class="badge">v{{ version }}</span></h1>
+    <div class="tagline">One search. Every app. The best deal.</div>
+    <div class="sub">Compare food &amp; grocery across Swiggy · Zomato · Blinkit · Zepto · Instamart · BigBasket · Flipkart Minutes · Amazon Fresh. Demo data.</div>
+  </header>
+  <main>
+    <div id="orderbanner"></div>
+    <form id="f">
+      <div class="row">
+        <input type="text" id="query" placeholder="e.g. Amul milk, Aashirvaad atta, paneer butter masala, chicken biryani" autofocus />
+        <button type="submit">Compare</button>
+      </div>
+      <div class="row">
+        <input type="text" id="pincode" value="560001" size="6" />
+        <input type="text" id="city" value="Bengaluru" />
+        <input type="number" id="budget" placeholder="budget ₹ (optional)" min="0" />
+        <label class="chk"><input type="checkbox" id="veg" /> Veg only</label>
+      </div>
+      <div class="row opts">
+        <span class="optlabel">Memberships:</span>
+        <label class="chk"><input type="checkbox" id="m_one" /> Swiggy One</label>
+        <label class="chk"><input type="checkbox" id="m_gold" /> Zomato Gold</label>
+        <label class="chk"><input type="checkbox" id="m_bbstar" /> BB Star</label>
+        <label class="chk"><input type="checkbox" id="m_prime" /> Prime</label>
+        <button type="button" class="linkbtn" id="detect-acct" title="Simulated — no passwords are ever requested or stored">🔗 Detect my memberships</button>
+        <span id="acct-status" class="evsub"></span>
+      </div>
+      <div class="row opts">
+        <span class="optlabel">Compare on:</span>
+        <label class="chk"><input type="checkbox" class="pf" value="swiggy" checked /> Swiggy</label>
+        <label class="chk"><input type="checkbox" class="pf" value="zomato" checked /> Zomato</label>
+        <label class="chk"><input type="checkbox" class="pf" value="blinkit" checked /> Blinkit</label>
+        <label class="chk"><input type="checkbox" class="pf" value="zepto" checked /> Zepto</label>
+        <label class="chk"><input type="checkbox" class="pf" value="instamart" checked /> Instamart</label>
+        <label class="chk"><input type="checkbox" class="pf" value="bigbasket" checked /> BigBasket</label>
+        <label class="chk"><input type="checkbox" class="pf" value="flipkart_minutes" checked /> Flipkart Minutes</label>
+        <label class="chk"><input type="checkbox" class="pf" value="amazon_fresh" checked /> Amazon Fresh</label>
+        <button type="button" class="linkbtn" id="pf-all">all</button>
+        <button type="button" class="linkbtn" id="pf-none">none</button>
+      </div>
+      <div class="hint">Try: <code>Amul milk</code>, <code>Tata salt</code>, <code>onion</code>, <code>masala dosa</code>. Uncheck platforms to narrow the comparison; toggle memberships to see effective prices change.</div>
+    </form>
+    <div id="out"></div>
+  </main>
+
+  <dialog id="hitl">
+    <h3>Confirm order — human approval required</h3>
+    <p id="hitl-body"></p>
+    <p class="hint">Placing an order is never done autonomously. This is a demo gate — nothing is actually ordered.</p>
+    <div class="row">
+      <button id="hitl-approve">Approve &amp; place</button>
+      <button class="ghost" id="hitl-cancel">Cancel</button>
+    </div>
+    <p id="hitl-result" class="meta"></p>
+  </dialog>
+
+<script>
+const out = document.getElementById('out');
+const dlg = document.getElementById('hitl');
+
+// Order confirmation banner — shown after redirect back from placing an order.
+(async function showOrderConfirmation() {
+  const id = new URLSearchParams(location.search).get('order');
+  if (!id) return;
+  try {
+    const r = await fetch('/api/order/' + encodeURIComponent(id));
+    if (!r.ok) return;
+    const o = await r.json();
+    const el = document.getElementById('orderbanner');
+    el.className = 'orderbanner';
+    el.innerHTML = `<span class="x" title="dismiss">✕</span>✓ <span class="oid">Order ${escapeHtml(o.order_id)}</span> placed on <strong>${escapeHtml(o.platform)}</strong> — ${escapeHtml(o.item_name)} for ₹${escapeHtml(String(o.true_price_inr))}. <span class="meta">Status: ${escapeHtml(o.status)} · a retry won't double-order.</span>`;
+    el.querySelector('.x').addEventListener('click', () => {
+      el.className = ''; el.innerHTML = '';
+      history.replaceState({}, '', '/');  // clear ?order= from the URL
+    });
+  } catch (e) {}
+})();
+
+// Auth status in the header.
+(async function refreshAuth() {
+  const bar = document.getElementById('authbar');
+  try {
+    const r = await fetch('/api/auth/me');
+    if (!r.ok) { bar.innerHTML = '<a href="/login">Log in</a>'; return; }
+    const u = await r.json();
+    bar.innerHTML = `Hi, <strong>${escapeHtml(u.display)}</strong>`;
+    const btn = document.createElement('button');
+    btn.textContent = 'Log out';
+    btn.addEventListener('click', async () => { await fetch('/api/auth/logout', { method: 'POST' }); location.reload(); });
+    bar.appendChild(btn);
+  } catch (e) { bar.innerHTML = '<a href="/login">Log in</a>'; }
+})();
+
+document.getElementById('pf-all').addEventListener('click', () =>
+  document.querySelectorAll('.pf').forEach(c => { c.checked = true; }));
+document.getElementById('pf-none').addEventListener('click', () =>
+  document.querySelectorAll('.pf').forEach(c => { c.checked = false; }));
+
+// "Detect my memberships" — simulated account connect (no credentials).
+const MEMBERSHIP_TOGGLE = { 'Swiggy One': 'm_one', 'Zomato Gold': 'm_gold', 'BB Star': 'm_bbstar', 'Prime': 'm_prime' };
+document.getElementById('detect-acct').addEventListener('click', async () => {
+  const status = document.getElementById('acct-status');
+  status.textContent = 'detecting…';
+  try {
+    const r = await fetch('/api/account/detect');
+    if (!r.ok) { status.textContent = 'detection failed'; return; }
+    const accounts = await r.json();
+    const active = new Set(accounts.filter(a => a.membership_active && a.membership).map(a => a.membership));
+    Object.entries(MEMBERSHIP_TOGGLE).forEach(([name, id]) => {
+      const el = document.getElementById(id);
+      if (el) el.checked = active.has(name);
+    });
+    const parts = Object.keys(MEMBERSHIP_TOGGLE).map(name => `${name} ${active.has(name) ? '✓' : '✗'}`);
+    status.innerHTML = 'Detected (simulated): ' + escapeHtml(parts.join('  ·  '));
+  } catch (e) {
+    status.textContent = 'detection failed';
+  }
+});
+
+document.getElementById('f').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const memberships = [];
+  if (document.getElementById('m_one').checked) memberships.push('Swiggy One');
+  if (document.getElementById('m_gold').checked) memberships.push('Zomato Gold');
+  if (document.getElementById('m_bbstar').checked) memberships.push('BB Star');
+  if (document.getElementById('m_prime').checked) memberships.push('Prime');
+  const platforms = Array.from(document.querySelectorAll('.pf:checked')).map(c => c.value);
+  if (platforms.length === 0) {
+    out.innerHTML = '<div class="card abstain">Select at least one platform under “Compare on”.</div>';
+    return;
+  }
+  const body = {
+    query: document.getElementById('query').value,
+    pincode: document.getElementById('pincode').value || '560001',
+    city: document.getElementById('city').value || 'Bengaluru',
+    veg_only: document.getElementById('veg').checked,
+    budget_inr: document.getElementById('budget').value || null,
+    memberships,
+    platforms,
+  };
+  out.innerHTML = `<div class="card">Comparing across ${platforms.length} platform${platforms.length === 1 ? '' : 's'}…</div>`;
+  try {
+    const r = await fetch('/api/compare', {
+      method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(body),
+    });
+    if (!r.ok) { out.innerHTML = `<div class="card abstain">Error ${r.status}. Check the query and try again.</div>`; return; }
+    render(await r.json());
+  } catch (err) {
+    out.innerHTML = `<div class="card abstain">Network error: ${err}</div>`;
+  }
+});
+
+function money(x) { return '₹' + x; }
+
+// --- minimal, XSS-safe markdown: escape first, then format ---
+function escapeHtml(s){return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
+function escapeAttr(s){return escapeHtml(s);}
+
+function mdInline(src){
+  let s = escapeHtml(src);
+  s = s.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
+  s = s.replace(/`([^`]+)`/g, '<code>$1</code>');
+  s = s.replace(/\[(BECAUSE|EVIDENCE|CONFIDENCE)\]/g, '<span class="tagk">[$1]</span>');
+  return s;
+}
+
+function markdown(src){
+  const lines = String(src).split(/\r?\n/);
+  const out = []; let inUl = false, inOl = false;
+  const closeLists = () => { if (inUl){out.push('</ul>'); inUl=false;} if (inOl){out.push('</ol>'); inOl=false;} };
+  for (const raw of lines) {
+    let m;
+    if (m = raw.match(/^\s*[-*]\s+(.*)$/)) {
+      if (inOl){out.push('</ol>'); inOl=false;}
+      if (!inUl){out.push('<ul>'); inUl=true;}
+      out.push('<li>' + mdInline(m[1]) + '</li>');
+    } else if (m = raw.match(/^\s*\d+\.\s+(.*)$/)) {
+      if (inUl){out.push('</ul>'); inUl=false;}
+      if (!inOl){out.push('<ol>'); inOl=true;}
+      out.push('<li>' + mdInline(m[1]) + '</li>');
+    } else if (raw.trim() === '') {
+      closeLists();
+    } else {
+      closeLists();
+      out.push('<p>' + mdInline(raw) + '</p>');
+    }
+  }
+  closeLists();
+  return out.join('');
+}
+
+function render(resp) {
+  if (resp.note && (!resp.results || !resp.results.length)) {
+    out.innerHTML = `<div class="card">${escapeHtml(resp.note)}</div>`;
+    return;
+  }
+  const up = resp.snapshot.connectors.filter(c => c.reachable && c.serviceable).length;
+  let html = `<div class="meta">${up} of ${resp.snapshot.connectors.length} platforms live · query: <code>${escapeHtml(resp.query)}</code></div>`;
+
+  for (const res of resp.results) {
+    const rec = res.recommendation;
+    html += `<div class="card">`;
+    html += `<div><strong>${escapeHtml(res.item_name)}</strong> <span class="badge">${escapeHtml(res.kind)}</span></div>`;
+
+    const src = res.narration_source === 'claude' ? '<span class="badge claude">Claude</span>' : '<span class="badge">rule-based</span>';
+    html += `<div class="narr">${markdown(res.narration)}</div> ${src}`;
+
+    if (rec.abstained) {
+      html += `<div class="abstain" style="margin-top:8px">⚠ Abstained: ${escapeHtml(rec.abstain_reason||'')}</div>`;
+    }
+
+    const rows = res.comparison.available.map(s => s.offer);
+    if (rows.length) {
+      const cheapest = res.comparison.cheapest?.platform, fastest = res.comparison.fastest?.platform, rated = res.comparison.best_rated?.platform;
+      html += `<table><thead><tr><th>Platform</th><th>All-in price</th><th>ETA</th><th>Rating</th><th>Offer</th><th></th></tr></thead><tbody>`;
+      for (const o of rows) {
+        const tags = [];
+        if (o.platform === cheapest) tags.push('<span class="tag">cheapest</span>');
+        if (o.platform === fastest) tags.push('<span class="tag">fastest</span>');
+        if (o.platform === rated) tags.push('<span class="tag">top rated</span>');
+        html += `<tr>
+          <td>${escapeHtml(o.platform)} ${tags.join(' ')}</td>
+          <td>${money(o.true_price)}</td>
+          <td>${o.eta_minutes != null ? o.eta_minutes + ' min' : '—'}</td>
+          <td>${o.rating != null ? o.rating + '★' : '—'}</td>
+          <td>${o.offer_text ? escapeHtml(o.offer_text) : '—'}</td>
+          <td><button class="ghost" data-p="${escapeAttr(o.platform)}" data-i="${escapeAttr(o.item_name)}" data-pr="${o.true_price}" data-pin="${escapeAttr(resp.user.pincode)}">Order</button></td>
+        </tr>`;
+      }
+      html += `</tbody></table>`;
+    }
+    if (res.comparison.unavailable.length) {
+      html += `<div class="meta">Out of stock: ${res.comparison.unavailable.map(o=>escapeHtml(o.platform)).join(', ')}</div>`;
+    }
+
+    // --- special callout blocks ---
+    if (!rec.abstained) {
+      html += `<div class="block because"><span class="blabel">BECAUSE</span><ul>${rec.because.map(b=>`<li>${mdInline(b)}</li>`).join('')}</ul></div>`;
+      if (rec.evidence.length) {
+        html += `<div class="block evidence"><span class="blabel">EVIDENCE</span><span class="evsub">where these numbers come from</span>`;
+        for (const ev of rec.evidence) {
+          html += `<div class="evrow">
+            <div class="evhead">${escapeHtml(ev.platform)}<span class="evsrc">${escapeHtml(ev.source_label)}</span><span class="evfresh">checked ${escapeHtml(ev.freshness)}</span></div>
+            <div class="evfacts">${ev.facts.map(f=>`<span class="evchip">${escapeHtml(f)}</span>`).join('')}</div>
+          </div>`;
+        }
+        if (rec.audit_claims && rec.audit_claims.length) {
+          html += `<details class="evaudit"><summary>audit trail (raw data)</summary><ul>${rec.audit_claims.map(a=>`<li>${escapeHtml(a)}</li>`).join('')}</ul></details>`;
+        }
+        html += `</div>`;
+      }
+      const pct = Math.round((rec.confidence_value || 0) * 100);
+      const barColor = rec.confidence_label === 'high' ? 'var(--good)' : rec.confidence_label === 'medium' ? 'var(--accent)' : 'var(--warn)';
+      html += `<div class="block confidence ${escapeAttr(rec.confidence_label)}"><span class="blabel">CONFIDENCE</span> <span class="conf-${escapeAttr(rec.confidence_label)}">${escapeHtml(String(rec.confidence_label).toUpperCase())} · ${rec.confidence_value}</span><div class="conf-bar"><i style="width:${pct}%;background:${barColor}"></i></div></div>`;
+    }
+    if (rec.assumptions.length) html += `<div class="meta">Assumptions: ${rec.assumptions.map(escapeHtml).join(' · ')}</div>`;
+    if (rec.missing_data.length) html += `<div class="meta">Missing data: ${rec.missing_data.map(escapeHtml).join(' · ')}</div>`;
+    html += `</div>`;
+  }
+  out.innerHTML = html;
+
+  out.querySelectorAll('button[data-p]').forEach(btn => btn.addEventListener('click', () => prepareOrder(btn.dataset)));
+}
+
+async function prepareOrder(d) {
+  const r = await fetch('/api/order/prepare', {
+    method: 'POST', headers: {'Content-Type':'application/json'},
+    body: JSON.stringify({platform: d.p, item_name: d.i, true_price_inr: d.pr, pincode: d.pin}),
+  });
+  const dec = await r.json();
+  document.getElementById('hitl-body').innerHTML =
+    `Order <strong>${escapeHtml(d.i)}</strong> from <strong>${escapeHtml(d.p)}</strong> for <strong>₹${escapeHtml(d.pr)}</strong>?<br>` +
+    `<span class="meta">${escapeHtml(dec.reason)} · idempotency key <code>${escapeHtml(dec.idempotency_key)}</code></span>`;
+  document.getElementById('hitl-result').textContent = '';
+  dlg.showModal();
+  document.getElementById('hitl-approve').onclick = async () => {
+    document.getElementById('hitl-result').textContent = 'Placing your order…';
+    const res = await fetch('/api/order/place', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ platform: d.p, item_name: d.i, true_price_inr: d.pr, pincode: d.pin, idempotency_key: dec.idempotency_key }),
+    });
+    if (res.ok) {
+      const order = await res.json();
+      document.getElementById('hitl-result').textContent = `✓ Order ${order.order_id} placed — taking you back to the app…`;
+      setTimeout(() => { location.href = '/?order=' + encodeURIComponent(order.order_id); }, 700);
+    } else {
+      document.getElementById('hitl-result').textContent = 'Could not place the order — please try again.';
+    }
+  };
+  document.getElementById('hitl-cancel').onclick = () => dlg.close();
+}
+</script>
+</body>
+</html>
