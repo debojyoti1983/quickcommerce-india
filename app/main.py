@@ -15,7 +15,8 @@ from pathlib import Path
 from typing import Optional
 
 from fastapi import FastAPI
-from fastapi.responses import HTMLResponse
+from fastapi.responses import FileResponse, HTMLResponse
+from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from pydantic import BaseModel, Field
 from starlette.requests import Request
@@ -28,13 +29,19 @@ from app.config import get_settings
 from app.coordination.orchestrator import QueryResponse, run_query
 from app.orders.store import Order, order_store
 from app.security.hitl import HITLDecision, prepare_action
+from app.ui_api import router as ui_router
 from app.models import UserContext
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(name)s %(message)s")
 
+_WEB_DIR = Path(__file__).parent / "web"
+_STATIC_DIR = _WEB_DIR / "static"
+
 app = FastAPI(title="QuickCommerce India", version=__version__)
 app.include_router(auth_router)
-_TEMPLATES = Jinja2Templates(directory=str(Path(__file__).parent / "web" / "templates"))
+app.include_router(ui_router)
+app.mount("/static", StaticFiles(directory=str(_STATIC_DIR)), name="static")
+_TEMPLATES = Jinja2Templates(directory=str(_WEB_DIR / "templates"))
 
 
 # --------------------------- request models --------------------------------
@@ -73,8 +80,9 @@ class OrderPlaceRequest(OrderPrepareRequest):
 
 # --------------------------- routes -----------------------------------------
 @app.get("/", response_class=HTMLResponse)
-async def index(request: Request) -> HTMLResponse:
-    return _TEMPLATES.TemplateResponse(request, "index.html", {"version": __version__})
+async def index() -> FileResponse:
+    # Revamped React UI (served statically); powered by /api/ui/search.
+    return FileResponse(str(_STATIC_DIR / "index.html"))
 
 
 @app.get("/healthz")

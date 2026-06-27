@@ -21,8 +21,10 @@ services:
       # Production hardening.
       - key: QC_COOKIE_SECURE
         value: "true"
+      # DEMO: no SMS/email provider is wired, so the OTP is shown on screen.
+      # Set this to "false" only once a real Twilio/SendGrid sender is connected.
       - key: QC_EXPOSE_DEMO_OTP
-        value: "false"
+        value: "true"
       # LLM key — set this yourself in the dashboard (do NOT commit it).
       - key: QC_ANTHROPIC_API_KEY
         sync: false
