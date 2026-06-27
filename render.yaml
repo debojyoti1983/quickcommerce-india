@@ -1,30 +1,31 @@
 # Render blueprint — https://render.com/docs/blueprint-spec
 # In Render: New + → Blueprint → connect this repo. It reads this file.
+#
+# Free tier (default below): zero cost, but the instance sleeps after ~15 min idle
+# (first request then cold-starts ~50s) and the SQLite DB is EPHEMERAL — it resets
+# on every redeploy/restart. Fine for a demo: the demo account re-seeds on startup.
+#
+# For persistence + always-on, change `plan: free` to `plan: starter` and add:
+#   disk: { name: data, mountPath: /app/data, sizeGB: 1 }
+#   envVars: - { key: QC_AUTH_DB_PATH, value: /app/data/auth.db }
 services:
   - type: web
     name: quickcommerce-india
     runtime: docker
-    plan: starter            # has persistent disk support; free plan has none
+    plan: free
     healthCheckPath: /healthz
     autoDeploy: true
-    disk:
-      name: data
-      mountPath: /app/data   # auth.db persists here across deploys
-      sizeGB: 1
     envVars:
       # Secret signing key — generated once by Render, kept out of the repo.
       - key: QC_SESSION_SECRET
         generateValue: true
-      # Persist the SQLite DB on the mounted disk.
-      - key: QC_AUTH_DB_PATH
-        value: /app/data/auth.db
-      # Production hardening.
+      # Served over HTTPS on Render -> mark the session cookie Secure.
       - key: QC_COOKIE_SECURE
         value: "true"
       # DEMO: no SMS/email provider is wired, so the OTP is shown on screen.
       # Set this to "false" only once a real Twilio/SendGrid sender is connected.
       - key: QC_EXPOSE_DEMO_OTP
         value: "true"
-      # LLM key — set this yourself in the dashboard (do NOT commit it).
+      # LLM key (optional) — set in the dashboard; app falls back to rule-based. Never commit it.
       - key: QC_ANTHROPIC_API_KEY
         sync: false
