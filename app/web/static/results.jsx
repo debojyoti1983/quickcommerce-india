@@ -23,8 +23,8 @@ function BestPick({ rec, comparison, opts, onOrder }) {
             <PlatformBadge id={b.platform} size={46} />
             <div>
               <div className="pname">{b.restaurant || plLabel(b.platform)}</div>
+              {b.restaurant && <div className="bp-via">via {plLabel(b.platform)}</div>}
               <div className="ptier">
-                {b.restaurant && <span>via {plLabel(b.platform)} · </span>}
                 <Icon name="shield" size={13} style={{ color: "var(--good)" }} />
                 {src.source_label} · checked {src.freshness}
               </div>
