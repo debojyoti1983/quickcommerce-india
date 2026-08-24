@@ -58,6 +58,7 @@ def _offer(o: NormalizedOffer) -> dict:
         "unit": o.unit,
         "kind": o.kind.value,
         "veg": o.veg,
+        "restaurant": o.restaurant,
         "available": o.available,
         "eta_minutes": o.eta_minutes,
         "rating": o.rating,

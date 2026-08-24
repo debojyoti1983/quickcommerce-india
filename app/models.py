@@ -56,6 +56,10 @@ class RawOffer(BaseModel):
     item_name: str
     unit: Optional[str] = None  # e.g. "500 ml", "1 plate", "5 kg"
     veg: Optional[bool] = None  # None = not applicable (most grocery)
+    # The specific restaurant serving this dish (food only; None for grocery,
+    # where the platform itself is the seller). Varies by city — see
+    # app/connectors/restaurants.py.
+    restaurant: Optional[str] = None
     base_price: Decimal
     tax: Decimal = Decimal("0")
     delivery_fee: Decimal = Decimal("0")
@@ -78,6 +82,7 @@ class NormalizedOffer(BaseModel):
     item_name: str
     unit: Optional[str] = None
     veg: Optional[bool] = None
+    restaurant: Optional[str] = None
     available: bool
     eta_minutes: Optional[int] = None
     rating: Optional[float] = None

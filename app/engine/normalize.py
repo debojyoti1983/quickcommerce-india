@@ -61,6 +61,7 @@ def normalize_offers(
                 item_name=o.item_name,
                 unit=o.unit,
                 veg=o.veg,
+                restaurant=o.restaurant,
                 available=o.available,
                 eta_minutes=o.eta_minutes,
                 rating=o.rating,
