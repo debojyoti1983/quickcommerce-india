@@ -45,6 +45,21 @@ _CHAIN_FOR_DISH: dict[str, str] = {
     "palak_paneer": "Punjab Grill",
     "chicken_65": "Barbeque Nation",
     "gulab_jamun": "Haldiram's",
+    "idli": "Sagar Ratna",
+    "medu_vada": "Sagar Ratna",
+    "veg_manchurian": "Mainland China",
+    "chilli_chicken": "Mainland China",
+    "veg_momos": "Wow! Momo",
+    "chicken_momos": "Wow! Momo",
+    "kadai_paneer": "Punjab Grill",
+    "malai_kofta": "Punjab Grill",
+    "samosa_2pcs": "Haldiram's",
+    "hakka_noodles_veg": "Mainland China",
+    "fish_curry": "Barbeque Nation",
+    "dhokla": "Haldiram's",
+    "kathi_roll_egg": "Haldiram's",
+    "jalebi": "Haldiram's",
+    "rasgulla": "Haldiram's",
 }
 
 # Real, well-known neighbourhoods for the original 20 cities — used when we

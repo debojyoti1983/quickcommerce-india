@@ -12,6 +12,7 @@ from app.bootstrap.registry import CONNECTORS
 from app.bootstrap.snapshot import ContextSnapshot, bootstrap_context
 from app.config import get_settings
 from app.connectors.mock_connector import MockConnector
+from app.connectors.mock_data import match_score
 from app.engine.compare import Comparison, build_comparison
 from app.engine.normalize import normalize_offers
 from app.engine.recommend import Recommendation, recommend
@@ -111,8 +112,16 @@ async def run_query(
             )
         )
 
-    # Most-relevant item (most platforms carrying it) first.
-    results.sort(key=lambda r: len(r.comparison.available) + len(r.comparison.unavailable), reverse=True)
+    # Most-relevant item first: how specific a match it is for the query
+    # (so "chicken momos" outranks "Chicken Curry", which only shares the
+    # generic word "chicken") — platform count is just the tiebreaker.
+    results.sort(
+        key=lambda r: (
+            match_score(query, r.item_name),
+            len(r.comparison.available) + len(r.comparison.unavailable),
+        ),
+        reverse=True,
+    )
     return QueryResponse(query=query, user=user, snapshot=snapshot, results=results)
 
 

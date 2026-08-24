@@ -81,6 +81,17 @@ def test_weak_prefix_match_is_flagged_low_confidence_not_claimed_confident():
     assert jalandhar.serviceable is False
 
 
+def test_known_metro_satellite_district_overrides_the_raw_prefix_guess():
+    # Regression for a real reported bug: 712xxx (Hooghly district towns —
+    # Chandannagar, Serampore, Bandel) is genuinely part of the Kolkata
+    # Metropolitan Area, but shares more raw digits with Durgapur's PIN
+    # (713xxx) than with Kolkata's (700xxx) — the generic longest-shared-
+    # prefix heuristic picked Durgapur, confidently, which is wrong.
+    match = resolve_from_pincode("712233")
+    assert match.city == "Kolkata"
+    assert match.serviceable is True
+
+
 def test_district_level_match_still_stays_confident():
     # A genuine 3+ digit shared prefix (same sorting district) should still
     # resolve confidently — only 1-2 digit matches get downgraded.

@@ -92,6 +92,26 @@ def test_unknown_query_returns_helpful_note():
     assert resp.note and "demo catalog" in resp.note
 
 
+def test_specific_dish_ranks_above_a_generically_shared_word_match():
+    # Regression: as the catalog grew, several dishes share a generic word
+    # ("chicken") without being related dishes at all. "chicken momos" used
+    # to rank "Chicken Curry" first (it shares only "chicken") ahead of the
+    # actual "Chicken Momos" match — results must lead with the specific,
+    # near-exact match; the weaker generic-word match can still trail behind.
+    resp = _run("chicken momos", UserContext())
+    assert resp.results
+    assert resp.results[0].item_name == "Chicken Momos (6 pcs)"
+
+
+def test_related_variant_still_surfaces_as_a_secondary_match():
+    # The existing "shared dish-type term" cross-match (biryani variants)
+    # must still work — just not rank ahead of the exact match.
+    resp = _run("chicken biryani", UserContext())
+    names = [r.item_name for r in resp.results]
+    assert names[0] == "Chicken Biryani"
+    assert "Veg Biryani" in names
+
+
 def test_out_of_stock_surfaced():
     # Flipkart Minutes lists Aashirvaad atta as out of stock in the seed data.
     resp = _run("Aashirvaad atta", UserContext())
