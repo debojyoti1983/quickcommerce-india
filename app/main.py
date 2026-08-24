@@ -20,6 +20,7 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from pydantic import BaseModel, Field
 from starlette.requests import Request
+from starlette.middleware.base import BaseHTTPMiddleware
 
 from app import __version__
 from app.accounts.mock_accounts import AccountStatus, detect_accounts
@@ -42,6 +43,25 @@ app.include_router(auth_router)
 app.include_router(ui_router)
 app.mount("/static", StaticFiles(directory=str(_STATIC_DIR)), name="static")
 _TEMPLATES = Jinja2Templates(directory=str(_WEB_DIR / "templates"))
+
+
+class _RevalidateStaticAssets(BaseHTTPMiddleware):
+    """Static filenames here aren't content-hashed (app.jsx, index.html, ...),
+    so without a Cache-Control header a browser applies its own heuristic
+    freshness (RFC 7234 4.2.2) and can keep serving a stale bundle from a
+    previous deploy indefinitely — a real bug, not a one-off: it silently
+    hides every future UI fix from anyone who has visited before. Force a
+    revalidation on every request instead; ETag/Last-Modified still let that
+    round-trip come back as a cheap 304."""
+
+    async def dispatch(self, request, call_next):
+        response = await call_next(request)
+        if request.url.path == "/" or request.url.path.startswith("/static/"):
+            response.headers["Cache-Control"] = "no-cache"
+        return response
+
+
+app.add_middleware(_RevalidateStaticAssets)
 
 
 # --------------------------- request models --------------------------------
