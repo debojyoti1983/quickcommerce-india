@@ -119,7 +119,8 @@ async def run_query(
 def _assumptions(user: UserContext) -> list[str]:
     out = [
         "Prices/ETAs are simulated demo data, not live platform values.",
-        f"Serviceability assumed for pincode {user.pincode} ({user.city}).",
+        f"Coverage, ETAs, and delivery fees for {user.city} ({user.pincode}) follow this "
+        "demo's per-city model, not live platform coverage.",
     ]
     if user.veg_only:
         out.append("Veg-only filter applied — non-veg items excluded.")
