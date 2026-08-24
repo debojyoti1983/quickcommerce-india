@@ -204,7 +204,7 @@ function App() {
     setOrderPhase("confirm"); setOrderId(null);
     setPending({
       platform: offer.platform, label, item_name: offer.item_name, true_price: offer.true_price,
-      pincode, idem: null,
+      restaurant: offer.restaurant || null, pincode, idem: null,
       membership, member: membership ? activeMems.includes(membership) : null,
       membership_applied: !!offer.membership_applied,
     });

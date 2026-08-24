@@ -15,6 +15,7 @@ from app.bootstrap.registry import ConnectorSpec
 from app.connectors.base import Serviceability
 from app.connectors.city_profiles import profile_for
 from app.connectors.mock_data import CATALOG, PLATFORM_OFFERS, match_catalog_keys
+from app.connectors.restaurants import restaurant_for
 from app.models import RawOffer, UserContext
 
 # Deterministic, tiny simulated network latency per platform (seconds).
@@ -81,6 +82,7 @@ class MockConnector:
                     item_name=item["name"],
                     unit=item["unit"],
                     veg=item["veg"],
+                    restaurant=restaurant_for(key, self.name, user.city),
                     base_price=params["base_price"],
                     tax=params.get("tax", 0),
                     delivery_fee=_scale_fee(params.get("delivery_fee", 0), city_profile.fee_multiplier),

@@ -22,8 +22,9 @@ function BestPick({ rec, comparison, opts, onOrder }) {
           <div className="bp-plat">
             <PlatformBadge id={b.platform} size={46} />
             <div>
-              <div className="pname">{plLabel(b.platform)}</div>
+              <div className="pname">{b.restaurant || plLabel(b.platform)}</div>
               <div className="ptier">
+                {b.restaurant && <span>via {plLabel(b.platform)} · </span>}
                 <Icon name="shield" size={13} style={{ color: "var(--good)" }} />
                 {src.source_label} · checked {src.freshness}
               </div>
@@ -95,9 +96,10 @@ function AltCard({ offer, tag, onOrder }) {
     <div className="alt">
       <div className="alt-top">
         <PlatformBadge id={offer.platform} size={30} />
-        <span className="nm">{plLabel(offer.platform)}</span>
+        <span className="nm">{offer.restaurant || plLabel(offer.platform)}</span>
         {t && <span className={"alt-tag " + t.cls}>{t.txt}</span>}
       </div>
+      {offer.restaurant && <div className="alt-via">via {plLabel(offer.platform)}</div>}
       <div className="alt-price tnum">{fmt(offer.true_price)}</div>
       <div className="alt-meta">
         {offer.eta_minutes != null && <span><Icon name="clock" size={13} /> {offer.eta_minutes}m</span>}
@@ -153,8 +155,13 @@ function CompareTable({ comparison, onOrder }) {
               {rows.map((o) => (
                 <tr key={o.platform} className={o.platform === best ? "best-row" : ""}>
                   <td>
-                    <span className="row-plat"><PlatformBadge id={o.platform} size={26} /> {plLabel(o.platform)}
-                      <span className="row-tags">{tags(o.platform)}</span></span>
+                    <span className="row-plat">
+                      <PlatformBadge id={o.platform} size={26} />
+                      <span>
+                        <span style={{ display: "block" }}>{o.restaurant || plLabel(o.platform)}<span className="row-tags">{tags(o.platform)}</span></span>
+                        {o.restaurant && <span className="row-via" style={{ display: "block" }}>via {plLabel(o.platform)}</span>}
+                      </span>
+                    </span>
                   </td>
                   <td className="num price-cell tnum">{fmt(o.true_price)}</td>
                   <td className="num tnum">{o.eta_minutes != null ? o.eta_minutes + "m" : "—"}</td>
@@ -165,7 +172,7 @@ function CompareTable({ comparison, onOrder }) {
               ))}
               {comparison.unavailable.map((o) => (
                 <tr key={o.platform} style={{ opacity: 0.6 }}>
-                  <td><span className="row-plat"><PlatformBadge id={o.platform} size={26} /> {plLabel(o.platform)}</span></td>
+                  <td><span className="row-plat"><PlatformBadge id={o.platform} size={26} /> {o.restaurant || plLabel(o.platform)}</span></td>
                   <td className="num" colSpan={4}><span className="oos">Out of stock</span></td>
                   <td className="num"><button className="tbtn" disabled>Order</button></td>
                 </tr>
@@ -179,8 +186,9 @@ function CompareTable({ comparison, onOrder }) {
               <div key={o.platform} className={"cmp-card" + (o.platform === best ? " best-row" : "")}>
                 <PlatformBadge id={o.platform} size={32} />
                 <div className="cc-main">
-                  <div className="cc-nm">{plLabel(o.platform)} {tags(o.platform)}</div>
+                  <div className="cc-nm">{o.restaurant || plLabel(o.platform)} {tags(o.platform)}</div>
                   <div className="cc-meta">
+                    {o.restaurant ? "via " + plLabel(o.platform) + " · " : ""}
                     {o.eta_minutes != null ? o.eta_minutes + "m" : "—"} · {o.rating != null ? o.rating + "★" : "—"}
                     {o.offer_text ? " · " + o.offer_text : ""}
                   </div>
@@ -195,7 +203,7 @@ function CompareTable({ comparison, onOrder }) {
             {comparison.unavailable.map((o) => (
               <div key={o.platform} className="cmp-card" style={{ opacity: 0.6 }}>
                 <PlatformBadge id={o.platform} size={32} />
-                <div className="cc-main"><div className="cc-nm">{plLabel(o.platform)}</div>
+                <div className="cc-main"><div className="cc-nm">{o.restaurant || plLabel(o.platform)}</div>
                   <div className="cc-meta oos">Out of stock</div></div>
               </div>
             ))}
@@ -283,7 +291,10 @@ function OrderModal({ pending, onClose, onConfirm, phase, orderId, user }) {
             <PlatformBadge id={pending.platform} size={42} />
             <div>
               <div className="ol-nm">{pending.item_name}</div>
-              <div className="ol-sub">{plLabel(pending.platform)} · delivery to {pending.pincode}</div>
+              <div className="ol-sub">
+                {pending.restaurant ? `${pending.restaurant} · via ${plLabel(pending.platform)}` : plLabel(pending.platform)}
+                {" "}· delivery to {pending.pincode}
+              </div>
             </div>
             <div className="ol-price tnum">{fmt(pending.true_price)}</div>
           </div>
