@@ -11,6 +11,7 @@ from __future__ import annotations
 from fastapi import APIRouter
 from pydantic import BaseModel, Field
 
+from app.bootstrap.geo import LocationMatch, list_known_cities, resolve_from_latlng
 from app.bootstrap.registry import CONNECTORS
 from app.coordination.orchestrator import run_query
 from app.models import NormalizedOffer, UserContext
@@ -19,6 +20,26 @@ router = APIRouter()
 
 # Display name (what the engine stores on offers) -> platform id (what the UI keys on).
 _DISPLAY_TO_ID = {c.display_name: c.name for c in CONNECTORS}
+
+
+class LocationResolveRequest(BaseModel):
+    # Bounds match what navigator.geolocation can ever report — reject anything
+    # else at the boundary rather than trust client-supplied floats blindly.
+    lat: float = Field(ge=-90, le=90)
+    lng: float = Field(ge=-180, le=180)
+
+
+@router.post("/api/location/resolve", response_model=LocationMatch)
+async def location_resolve(req: LocationResolveRequest) -> LocationMatch:
+    """Cold-start bootstrap step: browser geolocation coords -> nearest known
+    metro's pincode/city. No third-party geocoder call (see app/bootstrap/geo.py)."""
+    return resolve_from_latlng(req.lat, req.lng)
+
+
+@router.get("/api/location/cities")
+async def location_cities() -> dict:
+    """Manual-entry fallback list, shown when geolocation is denied/unsupported."""
+    return {"cities": list_known_cities()}
 
 
 class UISearchRequest(BaseModel):

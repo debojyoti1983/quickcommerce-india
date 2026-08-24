@@ -29,10 +29,20 @@ function loadState() {
   try { return JSON.parse(localStorage.getItem(LS_KEY)) || {}; } catch (e) { return {}; }
 }
 
+const LOC_LS_KEY = "qc_loc_v1";
+const DEFAULT_LOC = { city: "Bengaluru", pincode: "560001" };
+function loadLoc() {
+  try { return JSON.parse(localStorage.getItem(LOC_LS_KEY)) || null; } catch (e) { return null; }
+}
+function saveLoc(loc) {
+  try { localStorage.setItem(LOC_LS_KEY, JSON.stringify(loc)); } catch (e) {}
+}
+
 /* Backend-powered search — the real FastAPI engine is the source of truth.
    Returns the same per-item result shape the UI components consume. */
 async function qcSearch(query, opts) {
   try {
+    const loc = opts.loc || DEFAULT_LOC;
     const r = await fetch("/api/ui/search", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -41,6 +51,8 @@ async function qcSearch(query, opts) {
         memberships: opts.memberships || [],
         platforms: opts.platforms || [],
         veg_only: !!opts.vegOnly,
+        pincode: loc.pincode,
+        city: loc.city,
       }),
     });
     if (!r.ok) return [];
@@ -73,6 +85,50 @@ function App() {
   const [activeMems, setActiveMems] = uS([]); // membership programmes the user holds
   const thinkTimer = uR(null);
 
+  /* delivery location — ask the browser for it on first visit, fall back to a
+     manual city/pincode picker if it's denied, unsupported, or times out. */
+  const [loc, setLocState] = uS(loadLoc());
+  const [locStatus, setLocStatus] = uS(loadLoc() ? "resolved" : "detecting");
+  const [locModalOpen, setLocModalOpen] = uS(false);
+  const [cities, setCities] = uS([]);
+
+  function setLoc(next) { setLocState(next); saveLoc(next); setLocStatus("resolved"); }
+
+  function detectLocation() {
+    setLocStatus("detecting");
+    if (!("geolocation" in navigator)) { setLocStatus("unsupported"); setLocModalOpen(true); return; }
+    let done = false;
+    const finishManual = (status) => { if (done) return; done = true; setLocStatus(status); setLocModalOpen(true); };
+    const timer = setTimeout(() => finishManual("timeout"), 9000);
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        clearTimeout(timer);
+        if (done) return;
+        fetch("/api/location/resolve", {
+          method: "POST", headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ lat: pos.coords.latitude, lng: pos.coords.longitude }),
+        }).then((r) => (r.ok ? r.json() : null)).then((m) => {
+          done = true;
+          if (m) { setLoc({ city: m.city, pincode: m.pincode }); setLocModalOpen(false); }
+          else { setLocStatus("error"); setLocModalOpen(true); }
+        }).catch(() => { done = true; setLocStatus("error"); setLocModalOpen(true); });
+      },
+      () => { clearTimeout(timer); finishManual("denied"); },
+      { enableHighAccuracy: false, timeout: 8000, maximumAge: 10 * 60 * 1000 }
+    );
+  }
+
+  // First visit (no remembered location yet): ask immediately, mobile or desktop.
+  uE(() => { if (!loc) detectLocation(); }, []); // eslint-disable-line
+
+  // The manual picker's city dropdown needs the known-city list — fetch once, lazily.
+  uE(() => {
+    if (locModalOpen && cities.length === 0) {
+      fetch("/api/location/cities").then((r) => (r.ok ? r.json() : { cities: [] }))
+        .then((d) => setCities(d.cities || [])).catch(() => {});
+    }
+  }, [locModalOpen]); // eslint-disable-line
+
   /* who's signed in + which memberships they hold. When signed in, auto-apply the
      detected memberships so compared prices reflect the user's plans immediately. */
   uE(() => {
@@ -101,14 +157,14 @@ function App() {
   uE(() => {
     if (!submitted.trim()) { setResults([]); setPhase("done"); return; }
     let cancelled = false;
-    qcSearch(submitted, { memberships, platforms, vegOnly }).then((res) => {
+    qcSearch(submitted, { memberships, platforms, vegOnly, loc }).then((res) => {
       if (cancelled) return;
       clearInterval(thinkTimer.current);
       setResults(res);
       setPhase("done");
     });
     return () => { cancelled = true; };
-  }, [submitted, vegOnly, memberships, platforms]); // eslint-disable-line
+  }, [submitted, vegOnly, memberships, platforms, loc]); // eslint-disable-line
 
   function startThinking() {
     setPhase("thinking");
@@ -123,7 +179,7 @@ function App() {
     startThinking();
     if (query2 === submitted) {
       // same query — the effect won't refire, so fetch directly
-      qcSearch(query2, { memberships, platforms, vegOnly }).then((res) => {
+      qcSearch(query2, { memberships, platforms, vegOnly, loc }).then((res) => {
         clearInterval(thinkTimer.current); setResults(res); setPhase("done");
       });
     } else {
@@ -144,10 +200,11 @@ function App() {
     const meta = window.QC_PLATFORMS[offer.platform] || {};
     const label = meta.label || offer.platform;
     const membership = meta.membership || null;
+    const pincode = (loc && loc.pincode) || DEFAULT_LOC.pincode;
     setOrderPhase("confirm"); setOrderId(null);
     setPending({
       platform: offer.platform, label, item_name: offer.item_name, true_price: offer.true_price,
-      pincode: "560001", idem: null,
+      pincode, idem: null,
       membership, member: membership ? activeMems.includes(membership) : null,
       membership_applied: !!offer.membership_applied,
     });
@@ -155,7 +212,7 @@ function App() {
     try {
       const r = await fetch("/api/order/prepare", {
         method: "POST", headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ platform: label, item_name: offer.item_name, true_price_inr: offer.true_price, pincode: "560001" }),
+        body: JSON.stringify({ platform: label, item_name: offer.item_name, true_price_inr: offer.true_price, pincode }),
       });
       if (r.ok) { const dec = await r.json(); setPending((p) => (p ? { ...p, idem: dec.idempotency_key } : p)); }
     } catch (e) {}
@@ -199,8 +256,12 @@ function App() {
             <span className="wm">QuickCommerce<small>India · compare &amp; decide</small></span>
           </div>
           <div className="hdr-spacer" />
-          <span className="loc"><Icon name="pin" size={15} style={{ color: "var(--primary)" }} />
-            Bengaluru <span className="city">· 560001</span></span>
+          <button type="button" className="loc clickable" onClick={() => setLocModalOpen(true)}
+            title="Change delivery location">
+            <Icon name="pin" size={15} style={{ color: "var(--primary)" }} />
+            {loc ? <React.Fragment>{loc.city} <span className="city">· {loc.pincode}</span></React.Fragment>
+              : locStatus === "detecting" ? "Detecting location…" : "Set delivery location"}
+          </button>
           {user ? (
             <button className="loc" onClick={logout} title="Log out" style={{ cursor: "pointer" }}>
               <Icon name="check" size={14} style={{ color: "var(--good)" }} />
@@ -280,7 +341,7 @@ function App() {
 
         <div className="results">
           {phase !== "thinking" && hasResults && (
-            <div className="liveline"><span className="pulse" /> {`Live across ${platforms.length} app${platforms.length === 1 ? "" : "s"} · Bengaluru 560001 · ${results.length} item${results.length === 1 ? "" : "s"} matched`}</div>
+            <div className="liveline"><span className="pulse" /> {`Live across ${platforms.length} app${platforms.length === 1 ? "" : "s"} · ${loc ? loc.city + " " + loc.pincode : "detecting location…"} · ${results.length} item${results.length === 1 ? "" : "s"} matched`}</div>
           )}
           {phase === "thinking" ? (
             <Thinking sub={thinkSub} />
@@ -304,6 +365,11 @@ function App() {
 
       <OrderModal pending={pending} phase={orderPhase} orderId={orderId} user={user}
         onClose={() => setPending(null)} onConfirm={confirmOrder} />
+
+      <LocationModal open={locModalOpen} status={locStatus} cities={cities}
+        currentCity={loc ? loc.city : ""} currentPincode={loc ? loc.pincode : ""} onDetect={detectLocation}
+        onManualSave={(next) => { setLoc(next); setLocModalOpen(false); }}
+        onClose={() => { if (!loc) setLoc(DEFAULT_LOC); setLocModalOpen(false); }} />
 
       {toast && (
         <div className="toast">

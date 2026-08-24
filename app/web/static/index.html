@@ -63,6 +63,20 @@
     font-weight: 600; color: var(--ink); box-shadow: var(--shadow-sm); white-space: nowrap;
   }
   .loc .city { color: var(--muted); font-weight: 600; }
+  .loc.clickable { cursor: pointer; border: 0; font-family: inherit; }
+  .loc.clickable:hover { border-color: var(--primary); color: var(--primary); }
+
+  /* location picker modal */
+  .loc-or { display: flex; align-items: center; gap: 10px; margin: 4px 0 16px; color: var(--muted);
+    font-size: 11.5px; font-weight: 700; text-transform: uppercase; letter-spacing: .04em; }
+  .loc-or::before, .loc-or::after { content: ""; flex: 1; height: 1px; background: var(--line); }
+  .loc-field { margin-bottom: 12px; }
+  .loc-field label { display: block; font-size: 12px; font-weight: 700; color: var(--muted); margin-bottom: 6px; }
+  .loc-field select, .loc-field input {
+    width: 100%; border: 1px solid var(--line); border-radius: var(--r-sm); background: var(--surface-2);
+    color: var(--ink); padding: 11px 13px; font-size: 14.5px; font-family: inherit;
+  }
+  .loc-field select:focus, .loc-field input:focus { outline: none; border-color: var(--primary); }
   .icon-btn {
     width: 42px; height: 42px; border-radius: 12px; border: 1px solid var(--line);
     background: var(--surface); display: grid; place-items: center; color: var(--ink);
@@ -357,7 +371,10 @@
 
   @media (max-width: 720px) {
     .hdr-row { height: 58px; gap: 10px; }
-    .loc { display: none; }
+    /* Location stays reachable on mobile (tap to detect/change) — just tightened,
+       since this is the primary way to set delivery location on a phone. */
+    .loc { max-width: 118px; overflow: hidden; text-overflow: ellipsis; padding: 8px 10px; }
+    .loc .city { display: none; }
     .hero { padding: 26px 0 4px; }
     .btn-go span.t { display: none; }
     .btn-go { padding: 13px 15px; }
@@ -385,6 +402,7 @@
   <script src="/static/engine.js"></script>
   <script type="text/babel" src="/static/tweaks-panel.jsx"></script>
   <script type="text/babel" src="/static/ui.jsx"></script>
+  <script type="text/babel" src="/static/location.jsx"></script>
   <script type="text/babel" src="/static/results.jsx"></script>
   <script type="text/babel" src="/static/app.jsx"></script>
 </body>
