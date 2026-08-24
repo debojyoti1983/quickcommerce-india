@@ -171,6 +171,23 @@ _PINCODE_RE = re.compile(r"^[1-9]\d{5}$")
 # silently wrong "sure thing".
 _PREFIX_MATCH_DISTANCE_KM = {6: 0.0, 5: 2.0, 4: 8.0, 3: 20.0, 2: 320.0, 1: 500.0}
 
+# Real India Post facts (not guesses): a handful of 3-digit sorting districts
+# that belong to a metro's wider commute-shed even though they don't share
+# that metro's own representative PIN prefix, so raw longest-shared-prefix
+# comparison picks the wrong, distant city with false confidence. e.g. 712xxx
+# (Hooghly district towns — Chandannagar, Serampore, Bandel) is part of the
+# Kolkata Metropolitan Area, but shares more digits with Durgapur's PIN
+# (713xxx) than with Kolkata's (700xxx) — the generic algorithm below picked
+# Durgapur purely because "71" > "7" as a raw prefix, which is geographically
+# backwards. Checked first, before the generic heuristic; deliberately a
+# short, verifiable list rather than a large table of unverified guesses.
+_METRO_SATELLITE_DISTRICTS: dict[str, str] = {
+    "711": "Kolkata",  # Howrah
+    "712": "Kolkata",  # Hooghly district towns
+    "562": "Bengaluru",  # Bengaluru Rural / airport belt (Devanahalli)
+    "501": "Hyderabad",  # Ranga Reddy district outskirts
+}
+
 
 def resolve_from_pincode(pincode: str) -> LocationMatch | None:
     """Approximate city resolution from a PIN code's own structure — matched
@@ -180,6 +197,14 @@ def resolve_from_pincode(pincode: str) -> LocationMatch | None:
     code still resolves, just with low confidence (serviceable=False)."""
     if not _PINCODE_RE.match(pincode):
         return None
+
+    satellite_city = _METRO_SATELLITE_DISTRICTS.get(pincode[:3])
+    if satellite_city is not None:
+        city = _BY_NAME[satellite_city]
+        return LocationMatch(
+            city=city.city, pincode=pincode, matched_label=city.city,
+            distance_km=15.0, serviceable=True, in_india=True,
+        )
 
     best_city, best_prefix = _CITIES[0], -1
     for c in _CITIES:
