@@ -15,6 +15,27 @@ function LocationModal({ open, status, cities, currentCity, currentPincode, onDe
   const [city, setCity] = React.useState(currentCity || "");
   const [pincode, setPincode] = React.useState(currentPincode || "");
   const [showSuggestions, setShowSuggestions] = React.useState(false);
+  // A valid pincode is itself a location — resolve it server-side to a city
+  // (and therefore a real centroid/coverage tier) rather than treating it as
+  // a free-text field with no bearing on what gets suggested.
+  const [pincodeMatch, setPincodeMatch] = React.useState(null); // { city } | { error: true } | null
+
+  React.useEffect(() => {
+    if (!/^\d{6}$/.test(pincode)) { setPincodeMatch(null); return; }
+    let cancelled = false;
+    fetch("/api/location/resolve-pincode", {
+      method: "POST", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ pincode }),
+    }).then((r) => (r.ok ? r.json() : Promise.reject(r)))
+      .then((m) => {
+        if (cancelled) return;
+        setPincodeMatch({ city: m.city, serviceable: m.serviceable });
+        setCity(m.city);
+        setQuery(m.city);
+      })
+      .catch(() => { if (!cancelled) setPincodeMatch({ error: true }); });
+    return () => { cancelled = true; };
+  }, [pincode]); // eslint-disable-line
 
   if (!open) return null;
 
@@ -33,21 +54,29 @@ function LocationModal({ open, status, cities, currentCity, currentPincode, onDe
   function onQueryChange(value) {
     setQuery(value);
     setShowSuggestions(true);
-    // Typing invalidates a previous exact pick until it matches again — the
-    // pincode field still works standalone either way.
-    if (value.trim().toLowerCase() !== city.toLowerCase()) setCity("");
+    // Typing a city that no longer matches the current pick invalidates a
+    // previously-resolved pincode too — otherwise a stale pincode from an
+    // earlier lookup could get saved paired with an unrelated typed city.
+    if (value.trim().toLowerCase() !== city.toLowerCase()) {
+      setCity("");
+      setPincode("");
+      setPincodeMatch(null);
+    }
   }
 
-  const pinValid = /^\d{6}$/.test(pincode);
   const exactMatch = cities.find((c) => c.city.toLowerCase() === query.trim().toLowerCase());
-  const canSave = pinValid || !!city || !!exactMatch;
+  const canSave = !!exactMatch || !!city || !!(pincodeMatch && pincodeMatch.city);
 
   function save() {
+    // A resolved pincode wins first: it's the more specific signal, and the
+    // effect above sets `city` to a real city name once resolved, which
+    // would otherwise match the city list below and silently overwrite the
+    // user's actual typed pincode with that city's generic representative
+    // one — exactly the mismatch this whole feature exists to avoid.
+    if (pincodeMatch && pincodeMatch.city) { onManualSave({ city: pincodeMatch.city, pincode }); return; }
     const match = exactMatch || cities.find((c) => c.city === city);
-    onManualSave({
-      city: match ? match.city : (city || query.trim()),
-      pincode: pinValid ? pincode : (match ? match.pincode : pincode),
-    });
+    if (match) { onManualSave({ city: match.city, pincode: match.pincode }); return; }
+    onManualSave({ city: query.trim(), pincode });
   }
 
   return (
@@ -105,9 +134,23 @@ function LocationModal({ open, status, cities, currentCity, currentPincode, onDe
                 )}
               </div>
               <div className="loc-field">
-                <label>Pincode</label>
-                <input value={pincode} onChange={(e) => setPincode(e.target.value.replace(/\D/g, "").slice(0, 6))}
-                  placeholder="6-digit pincode (optional)" inputMode="numeric" maxLength={6} />
+                <label>Or enter a pincode</label>
+                <input value={pincode}
+                  onChange={(e) => { setPincode(e.target.value.replace(/\D/g, "").slice(0, 6)); setShowSuggestions(false); }}
+                  placeholder="6-digit pincode" inputMode="numeric" maxLength={6} autoComplete="off" />
+                {pincode.length === 6 && pincodeMatch && pincodeMatch.city && (
+                  <div className={"loc-pin-hint" + (pincodeMatch.serviceable === false ? " warn" : " ok")}>
+                    <Icon name={pincodeMatch.serviceable === false ? "alert" : "check"} size={12} />
+                    {pincodeMatch.serviceable === false
+                      ? `Closest coverage we have is ${pincodeMatch.city} — results may be approximate.`
+                      : `Matched to ${pincodeMatch.city}.`}
+                  </div>
+                )}
+                {pincode.length === 6 && pincodeMatch && pincodeMatch.error && (
+                  <div className="loc-pin-hint warn">
+                    <Icon name="alert" size={12} /> That doesn't look like a valid Indian PIN code.
+                  </div>
+                )}
               </div>
             </React.Fragment>
           )}

@@ -8,10 +8,10 @@ single source of truth — and just reshapes the output. Kept separate from
 
 from __future__ import annotations
 
-from fastapi import APIRouter
+from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel, Field
 
-from app.bootstrap.geo import LocationMatch, list_known_cities, resolve_from_latlng
+from app.bootstrap.geo import LocationMatch, list_known_cities, resolve_from_latlng, resolve_from_pincode
 from app.bootstrap.registry import CONNECTORS
 from app.coordination.orchestrator import run_query
 from app.models import NormalizedOffer, UserContext
@@ -40,6 +40,23 @@ async def location_resolve(req: LocationResolveRequest) -> LocationMatch:
 async def location_cities() -> dict:
     """Manual-entry fallback list, shown when geolocation is denied/unsupported."""
     return {"cities": list_known_cities()}
+
+
+class PincodeResolveRequest(BaseModel):
+    # Format-checked here; resolve_from_pincode does the real (zone/district
+    # prefix) resolution and is the source of truth on validity.
+    pincode: str = Field(min_length=6, max_length=6, pattern=r"^\d{6}$")
+
+
+@router.post("/api/location/resolve-pincode", response_model=LocationMatch)
+async def location_resolve_pincode(req: PincodeResolveRequest) -> LocationMatch:
+    """Manual entry: a PIN code alone drives location resolution (city +
+    coverage tier + restaurant-radius centroid) — see app/bootstrap/geo.py
+    for how a PIN's own structure is used, and its limits."""
+    match = resolve_from_pincode(req.pincode)
+    if match is None:
+        raise HTTPException(status_code=422, detail="Not a valid Indian PIN code")
+    return match
 
 
 class UISearchRequest(BaseModel):

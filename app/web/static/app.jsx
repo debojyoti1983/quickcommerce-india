@@ -9,7 +9,7 @@ const PLAT_URL = {
   instamart: "https://www.swiggy.com/instamart", bigbasket: "https://www.bigbasket.com",
   flipkart_minutes: "https://www.flipkart.com", amazon_fresh: "https://www.amazon.in/fresh",
 };
-const SAMPLES = ["Amul milk", "Chicken biryani", "Tata salt", "Masala dosa", "Onion", "Paneer butter masala"];
+const SAMPLES = ["Amul milk", "Chicken biryani", "Pav bhaji", "Masala dosa", "Rajma chawal", "Paneer butter masala"];
 const THINK_STEPS = [
   "Probing serviceability across 8 apps in your pincode…",
   "Fetching live prices — Blinkit, Zepto, Instamart…",
