@@ -49,6 +49,11 @@ class UISearchRequest(BaseModel):
     veg_only: bool = False
     pincode: str = Field(default="560001", pattern=r"^\d{6}$")
     city: str = Field(default="Bengaluru", max_length=60)
+    # Precise browser-geolocation coords, when granted — narrows "nearby
+    # restaurant" to a real radius of where the user actually is rather than
+    # just the selected city's centroid (see app/connectors/restaurants.py).
+    lat: float | None = Field(default=None, ge=-90, le=90)
+    lng: float | None = Field(default=None, ge=-180, le=180)
 
 
 def _offer(o: NormalizedOffer) -> dict:
@@ -59,6 +64,7 @@ def _offer(o: NormalizedOffer) -> dict:
         "kind": o.kind.value,
         "veg": o.veg,
         "restaurant": o.restaurant,
+        "restaurant_distance_km": o.restaurant_distance_km,
         "available": o.available,
         "eta_minutes": o.eta_minutes,
         "rating": o.rating,
@@ -76,7 +82,8 @@ async def ui_search(req: UISearchRequest) -> dict:
         return {"results": []}
 
     user = UserContext(
-        pincode=req.pincode, city=req.city, veg_only=req.veg_only, memberships=req.memberships
+        pincode=req.pincode, city=req.city, lat=req.lat, lng=req.lng,
+        veg_only=req.veg_only, memberships=req.memberships,
     )
     resp = await run_query(req.query, user, platforms=req.platforms)
 

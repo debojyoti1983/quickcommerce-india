@@ -53,6 +53,11 @@ async function qcSearch(query, opts) {
         veg_only: !!opts.vegOnly,
         pincode: loc.pincode,
         city: loc.city,
+        // Precise coords (when geolocation was granted) let the backend
+        // suggest restaurants within a real 10km radius of where we actually
+        // are, instead of just the city's centroid.
+        lat: loc.lat != null ? loc.lat : undefined,
+        lng: loc.lng != null ? loc.lng : undefined,
       }),
     });
     if (!r.ok) return [];
@@ -109,8 +114,12 @@ function App() {
           body: JSON.stringify({ lat: pos.coords.latitude, lng: pos.coords.longitude }),
         }).then((r) => (r.ok ? r.json() : null)).then((m) => {
           done = true;
-          if (m) { setLoc({ city: m.city, pincode: m.pincode }); setLocModalOpen(false); }
-          else { setLocStatus("error"); setLocModalOpen(true); }
+          if (m) {
+            // Keep the precise coords too — they narrow "nearby restaurant"
+            // to a real 10km radius instead of just the city centroid.
+            setLoc({ city: m.city, pincode: m.pincode, lat: pos.coords.latitude, lng: pos.coords.longitude });
+            setLocModalOpen(false);
+          } else { setLocStatus("error"); setLocModalOpen(true); }
         }).catch(() => { done = true; setLocStatus("error"); setLocModalOpen(true); });
       },
       () => { clearTimeout(timer); finishManual("denied"); },
@@ -204,7 +213,8 @@ function App() {
     setOrderPhase("confirm"); setOrderId(null);
     setPending({
       platform: offer.platform, label, item_name: offer.item_name, true_price: offer.true_price,
-      restaurant: offer.restaurant || null, pincode, idem: null,
+      restaurant: offer.restaurant || null, restaurant_distance_km: offer.restaurant_distance_km ?? null,
+      pincode, idem: null,
       membership, member: membership ? activeMems.includes(membership) : null,
       membership_applied: !!offer.membership_applied,
     });

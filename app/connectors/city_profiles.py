@@ -46,7 +46,9 @@ _TIER2 = CityProfile(platforms=_MINUS_LONG_TAIL, eta_multiplier=1.25, fee_multip
 _TIER3 = CityProfile(platforms=_SMALL_CITY_PLATFORMS, eta_multiplier=1.6, fee_multiplier=Decimal("1.3"))
 
 # Keyed on the same city names app/bootstrap/geo.py resolves to, so the
-# location picker and this coverage model always agree.
+# location picker and this coverage model always agree. Every city in that
+# list gets an explicit tier here — the goal is that ANY city a user can pick
+# is serviceable by at least the tier-3 platform set, never zero platforms.
 CITY_PROFILES: dict[str, CityProfile] = {
     # Tier-1 metros — full 8-platform coverage, no ETA/fee penalty.
     "Bengaluru": _METRO, "Mumbai": _METRO, "Delhi": _METRO, "Hyderabad": _METRO,
@@ -55,8 +57,22 @@ CITY_PROFILES: dict[str, CityProfile] = {
     "Ahmedabad": _TIER2, "Jaipur": _TIER2, "Lucknow": _TIER2, "Chandigarh": _TIER2,
     "Kochi": _TIER2, "Indore": _TIER2, "Nagpur": _TIER2, "Coimbatore": _TIER2,
     "Visakhapatnam": _TIER2,
+    "Thiruvananthapuram": _TIER2, "Bhubaneswar": _TIER2, "Raipur": _TIER2,
+    "Ranchi": _TIER2, "Dehradun": _TIER2, "Panaji": _TIER2, "Puducherry": _TIER2,
+    "Amritsar": _TIER2, "Ludhiana": _TIER2, "Gurugram": _TIER2, "Faridabad": _TIER2,
+    "Varanasi": _TIER2, "Kanpur": _TIER2, "Agra": _TIER2, "Noida": _TIER2,
+    "Prayagraj": _TIER2, "Jamshedpur": _TIER2, "Vadodara": _TIER2, "Rajkot": _TIER2,
+    "Vijayawada": _TIER2, "Warangal": _TIER2, "Mysuru": _TIER2, "Mangaluru": _TIER2,
+    "Hubballi": _TIER2, "Madurai": _TIER2, "Tiruchirappalli": _TIER2, "Salem": _TIER2,
+    "Thane": _TIER2, "Nashik": _TIER2, "Aurangabad": _TIER2, "Jabalpur": _TIER2,
+    "Gwalior": _TIER2, "Cuttack": _TIER2, "Siliguri": _TIER2, "Durgapur": _TIER2,
+    "Jodhpur": _TIER2, "Udaipur": _TIER2,
     # Tier-3 — only the fastest-scaling dark-store + food-delivery networks.
     "Bhopal": _TIER3, "Surat": _TIER3, "Patna": _TIER3, "Guwahati": _TIER3,
+    "Shimla": _TIER3, "Srinagar": _TIER3, "Jammu": _TIER3, "Agartala": _TIER3,
+    "Imphal": _TIER3, "Shillong": _TIER3, "Aizawl": _TIER3, "Kohima": _TIER3,
+    "Itanagar": _TIER3, "Gangtok": _TIER3, "Port Blair": _TIER3, "Tirupati": _TIER3,
+    "Muzaffarpur": _TIER3, "Gaya": _TIER3, "Dibrugarh": _TIER3,
 }
 
 # Unknown/unlisted city -> don't silently zero out every result.

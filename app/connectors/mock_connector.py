@@ -75,6 +75,11 @@ class MockConnector:
             # Membership discount only applies if the user actually holds it.
             discount = params.get("membership_discount", 0) if membership_active else 0
 
+            # Nearest simulated outlet within range, or None if nothing modelled
+            # falls within the search radius (see restaurants.py — grocery items
+            # always get None here since they have no chain in _CHAIN_FOR_DISH).
+            nearby = restaurant_for(key, self.name, user.city, lat=user.lat, lng=user.lng)
+
             results.append(
                 RawOffer(
                     platform=self.spec.display_name,
@@ -82,7 +87,8 @@ class MockConnector:
                     item_name=item["name"],
                     unit=item["unit"],
                     veg=item["veg"],
-                    restaurant=restaurant_for(key, self.name, user.city),
+                    restaurant=nearby.name if nearby else None,
+                    restaurant_distance_km=nearby.distance_km if nearby else None,
                     base_price=params["base_price"],
                     tax=params.get("tax", 0),
                     delivery_fee=_scale_fee(params.get("delivery_fee", 0), city_profile.fee_multiplier),
