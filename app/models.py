@@ -41,6 +41,12 @@ class UserContext(BaseModel):
 
     pincode: str = "560001"
     city: str = "Bengaluru"
+    # Precise browser-geolocation coordinates, when the user granted them —
+    # used to find restaurants within a real radius of where they actually
+    # are, rather than just the selected city's centroid. None when the
+    # location was picked manually (see app/connectors/restaurants.py).
+    lat: Optional[float] = Field(default=None, ge=-90, le=90)
+    lng: Optional[float] = Field(default=None, ge=-180, le=180)
     veg_only: bool = False
     budget_inr: Optional[Decimal] = None
     cuisine_prefs: list[str] = Field(default_factory=list)
@@ -60,6 +66,7 @@ class RawOffer(BaseModel):
     # where the platform itself is the seller). Varies by city — see
     # app/connectors/restaurants.py.
     restaurant: Optional[str] = None
+    restaurant_distance_km: Optional[float] = None
     base_price: Decimal
     tax: Decimal = Decimal("0")
     delivery_fee: Decimal = Decimal("0")
@@ -83,6 +90,7 @@ class NormalizedOffer(BaseModel):
     unit: Optional[str] = None
     veg: Optional[bool] = None
     restaurant: Optional[str] = None
+    restaurant_distance_km: Optional[float] = None
     available: bool
     eta_minutes: Optional[int] = None
     rating: Optional[float] = None

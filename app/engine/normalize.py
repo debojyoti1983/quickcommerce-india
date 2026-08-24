@@ -62,6 +62,7 @@ def normalize_offers(
                 unit=o.unit,
                 veg=o.veg,
                 restaurant=o.restaurant,
+                restaurant_distance_km=o.restaurant_distance_km,
                 available=o.available,
                 eta_minutes=o.eta_minutes,
                 rating=o.rating,

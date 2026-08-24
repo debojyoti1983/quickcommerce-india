@@ -5,6 +5,14 @@ const PL = window.QC_PLATFORMS;
 
 function plLabel(id) { return (PL[id] || {}).label || id; }
 
+/* "via Zomato · 2.3 km away" — the distance is real (see
+   app/connectors/restaurants.py: a genuine radius filter, not decoration). */
+function viaLabel(offer) {
+  if (!offer.restaurant) return null;
+  const dist = offer.restaurant_distance_km;
+  return `via ${plLabel(offer.platform)}` + (dist != null ? ` · ${dist} km away` : "");
+}
+
 /* ---- the hero recommendation card ---- */
 function BestPick({ rec, comparison, opts, onOrder }) {
   const b = rec.best.offer;
@@ -23,7 +31,7 @@ function BestPick({ rec, comparison, opts, onOrder }) {
             <PlatformBadge id={b.platform} size={46} />
             <div>
               <div className="pname">{b.restaurant || plLabel(b.platform)}</div>
-              {b.restaurant && <div className="bp-via">via {plLabel(b.platform)}</div>}
+              {b.restaurant && <div className="bp-via">{viaLabel(b)}</div>}
               <div className="ptier">
                 <Icon name="shield" size={13} style={{ color: "var(--good)" }} />
                 {src.source_label} · checked {src.freshness}
@@ -99,7 +107,7 @@ function AltCard({ offer, tag, onOrder }) {
         <span className="nm">{offer.restaurant || plLabel(offer.platform)}</span>
         {t && <span className={"alt-tag " + t.cls}>{t.txt}</span>}
       </div>
-      {offer.restaurant && <div className="alt-via">via {plLabel(offer.platform)}</div>}
+      {offer.restaurant && <div className="alt-via">{viaLabel(offer)}</div>}
       <div className="alt-price tnum">{fmt(offer.true_price)}</div>
       <div className="alt-meta">
         {offer.eta_minutes != null && <span><Icon name="clock" size={13} /> {offer.eta_minutes}m</span>}
@@ -159,7 +167,7 @@ function CompareTable({ comparison, onOrder }) {
                       <PlatformBadge id={o.platform} size={26} />
                       <span>
                         <span style={{ display: "block" }}>{o.restaurant || plLabel(o.platform)}<span className="row-tags">{tags(o.platform)}</span></span>
-                        {o.restaurant && <span className="row-via" style={{ display: "block" }}>via {plLabel(o.platform)}</span>}
+                        {o.restaurant && <span className="row-via" style={{ display: "block" }}>{viaLabel(o)}</span>}
                       </span>
                     </span>
                   </td>
@@ -188,7 +196,7 @@ function CompareTable({ comparison, onOrder }) {
                 <div className="cc-main">
                   <div className="cc-nm">{o.restaurant || plLabel(o.platform)} {tags(o.platform)}</div>
                   <div className="cc-meta">
-                    {o.restaurant ? "via " + plLabel(o.platform) + " · " : ""}
+                    {o.restaurant ? viaLabel(o) + " · " : ""}
                     {o.eta_minutes != null ? o.eta_minutes + "m" : "—"} · {o.rating != null ? o.rating + "★" : "—"}
                     {o.offer_text ? " · " + o.offer_text : ""}
                   </div>
@@ -292,7 +300,10 @@ function OrderModal({ pending, onClose, onConfirm, phase, orderId, user }) {
             <div>
               <div className="ol-nm">{pending.item_name}</div>
               <div className="ol-sub">
-                {pending.restaurant ? `${pending.restaurant} · via ${plLabel(pending.platform)}` : plLabel(pending.platform)}
+                {pending.restaurant
+                  ? `${pending.restaurant} · via ${plLabel(pending.platform)}`
+                    + (pending.restaurant_distance_km != null ? ` · ${pending.restaurant_distance_km} km away` : "")
+                  : plLabel(pending.platform)}
                 {" "}· delivery to {pending.pincode}
               </div>
             </div>
