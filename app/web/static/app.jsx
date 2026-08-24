@@ -259,17 +259,19 @@ function App() {
           <button type="button" className="loc clickable" onClick={() => setLocModalOpen(true)}
             title="Change delivery location">
             <Icon name="pin" size={15} style={{ color: "var(--primary)" }} />
-            {loc ? <React.Fragment>{loc.city} <span className="city">· {loc.pincode}</span></React.Fragment>
-              : locStatus === "detecting" ? "Detecting location…" : "Set delivery location"}
+            <span className="loc-label">
+              {loc ? <React.Fragment>{loc.city} <span className="city">· {loc.pincode}</span></React.Fragment>
+                : locStatus === "detecting" ? "Detecting location…" : "Set delivery location"}
+            </span>
           </button>
           {user ? (
             <button className="loc" onClick={logout} title="Log out" style={{ cursor: "pointer" }}>
               <Icon name="check" size={14} style={{ color: "var(--good)" }} />
-              {user.display.split("@")[0]} <span className="city">· log out</span>
+              <span className="loc-label">{user.display.split("@")[0]} <span className="city">· log out</span></span>
             </button>
           ) : (
             <a className="loc" href="/login" style={{ textDecoration: "none" }}>
-              <Icon name="shield" size={14} style={{ color: "var(--primary)" }} /> Log in
+              <Icon name="shield" size={14} style={{ color: "var(--primary)" }} /> <span className="loc-label">Log in</span>
             </a>
           )}
           <button className="icon-btn" aria-label="Cart">

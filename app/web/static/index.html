@@ -63,6 +63,7 @@
     font-weight: 600; color: var(--ink); box-shadow: var(--shadow-sm); white-space: nowrap;
   }
   .loc .city { color: var(--muted); font-weight: 600; }
+  .loc-label { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0; }
   .loc.clickable { cursor: pointer; border: 0; font-family: inherit; }
   .loc.clickable:hover { border-color: var(--primary); color: var(--primary); }
 
@@ -202,6 +203,7 @@
   .bp-plat { display: flex; align-items: center; gap: 12px; }
   .bp-plat .pname { font-family: "Bricolage Grotesque"; font-weight: 700; font-size: 19px; }
   .bp-plat .ptier { font-size: 11.5px; color: var(--muted); font-weight: 600; display: flex; align-items: center; gap: 5px; }
+  .bp-plat .bp-via { font-size: 11.5px; color: var(--muted); font-weight: 600; margin: 1px 0 2px; }
   .bp-price { margin-left: auto; text-align: right; }
   .bp-price .now { font-family: "Bricolage Grotesque"; font-weight: 800; font-size: clamp(30px, 6vw, 40px);
     line-height: 1; letter-spacing: -.03em; }
@@ -372,11 +374,21 @@
   footer.app .ft .sim { display: inline-flex; align-items: center; gap: 6px; font-weight: 700; }
 
   @media (max-width: 720px) {
-    .hdr-row { height: 58px; gap: 10px; }
-    /* Location stays reachable on mobile (tap to detect/change) — just tightened,
-       since this is the primary way to set delivery location on a phone. */
-    .loc { max-width: 118px; overflow: hidden; text-overflow: ellipsis; padding: 8px 10px; }
+    .hdr-row { height: 54px; gap: 5px; }
+    .brand { min-width: 0; gap: 7px; }
+    .brand .mark { width: 28px; height: 28px; border-radius: 9px; }
+    .brand .wm { font-size: 14.5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .brand .wm small { display: none; }
+    /* All header pills (location / login / logged-in) share `.loc`. They must
+       stay legible and tappable on a phone — `flex: none` stops flexbox from
+       silently shrinking them below their content (which, combined with
+       overflow:hidden, once crushed "Log in" down to just "L"). Drop only the
+       secondary "· 560001" / "· log out" suffix, and cap city names at a
+       readable width with an ellipsis rather than letting a long one push
+       everything else off-screen. */
+    .loc { flex: none; padding: 6px 8px; font-size: 12px; gap: 4px; max-width: 96px; }
     .loc .city { display: none; }
+    .icon-btn { width: 34px; height: 34px; border-radius: 10px; }
     .hero { padding: 26px 0 4px; }
     .btn-go span.t { display: none; }
     .btn-go { padding: 13px 15px; }
