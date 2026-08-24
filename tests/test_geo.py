@@ -1,6 +1,6 @@
-"""Tests for lat/lng -> pincode/city resolution (no external geocoder)."""
+"""Tests for lat/lng and pincode -> pincode/city resolution (no external geocoder)."""
 
-from app.bootstrap.geo import list_known_cities, resolve_from_latlng
+from app.bootstrap.geo import list_known_cities, resolve_from_latlng, resolve_from_pincode
 
 
 def test_resolves_to_nearest_known_metro():
@@ -33,3 +33,34 @@ def test_known_cities_cover_every_metro_with_valid_pincodes():
     assert len(cities) >= 15
     assert all(len(c["pincode"]) == 6 and c["pincode"].isdigit() for c in cities)
     assert cities == sorted(cities, key=lambda c: c["city"])
+
+
+def test_exact_known_pincode_resolves_with_full_confidence():
+    match = resolve_from_pincode("560001")
+    assert match.city == "Bengaluru"
+    assert match.distance_km == 0.0
+    assert match.serviceable is True
+
+
+def test_nearby_unknown_pincode_still_resolves_via_shared_prefix():
+    # 560034 isn't one of our exact known codes, but shares Bengaluru's
+    # 3-digit sorting-district prefix ("560") — should still land there,
+    # confidently, rather than falling back to a distant "nearest" guess.
+    match = resolve_from_pincode("560034")
+    assert match.city == "Bengaluru"
+    assert match.serviceable is True
+
+
+def test_pincode_with_no_shared_prefix_is_low_confidence_but_never_raises():
+    # A syntactically valid PIN that shares nothing meaningful with any known
+    # city's prefix should still resolve to *something*, just unserviceable.
+    match = resolve_from_pincode("999999")
+    assert match is not None
+    assert match.in_india is True
+
+
+def test_malformed_pincodes_are_rejected():
+    assert resolve_from_pincode("12345") is None  # too short
+    assert resolve_from_pincode("1234567") is None  # too long
+    assert resolve_from_pincode("012345") is None  # no real Indian PIN starts with 0
+    assert resolve_from_pincode("abcdef") is None  # not digits

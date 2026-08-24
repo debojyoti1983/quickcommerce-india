@@ -14,6 +14,7 @@ same cities (see app.web.static.location.jsx).
 from __future__ import annotations
 
 import math
+import re
 from typing import NamedTuple
 
 from pydantic import BaseModel
@@ -149,6 +150,49 @@ def centroid_for(city: str) -> tuple[float, float] | None:
     coverage table (see app/connectors/restaurants.py for the fallback)."""
     c = _BY_NAME.get(city)
     return (c.lat, c.lng) if c else None
+
+
+# A real Indian PIN code is exactly 6 digits and never starts with 0.
+_PINCODE_RE = re.compile(r"^[1-9]\d{5}$")
+
+# Shared-prefix length with a known city's representative PIN -> an honest
+# confidence-proportional distance. India's PIN structure genuinely encodes
+# geography this way (digit 1 = postal zone, digits 1-2 = sub-zone, digits
+# 1-3 = sorting district) but we don't have a full nationwide pincode
+# database, so a longer shared prefix is a real signal, not a guess dressed
+# up as one — and it's expressed as the same distance_km/serviceable fields
+# resolve_from_latlng uses, so callers treat both resolution paths alike.
+_PREFIX_MATCH_DISTANCE_KM = {6: 0.0, 5: 2.0, 4: 8.0, 3: 20.0, 2: 120.0, 1: 260.0}
+
+
+def resolve_from_pincode(pincode: str) -> LocationMatch | None:
+    """Approximate city resolution from a PIN code's own structure — matched
+    against the longest shared prefix with one of our known cities' PINs.
+    Returns None only for a malformed code (not 6 digits, or starting with 0,
+    which no real Indian PIN does); a syntactically valid but unrecognized
+    code still resolves, just with low confidence (serviceable=False)."""
+    if not _PINCODE_RE.match(pincode):
+        return None
+
+    best_city, best_prefix = _CITIES[0], -1
+    for c in _CITIES:
+        shared = 0
+        for a, b in zip(pincode, c.pincode):
+            if a != b:
+                break
+            shared += 1
+        if shared > best_prefix:
+            best_city, best_prefix = c, shared
+
+    distance = _PREFIX_MATCH_DISTANCE_KM.get(best_prefix, 800.0)
+    return LocationMatch(
+        city=best_city.city,
+        pincode=pincode,
+        matched_label=best_city.city,
+        distance_km=distance,
+        serviceable=distance <= _SERVICEABLE_RADIUS_KM,
+        in_india=True,  # syntactically valid Indian PIN code
+    )
 
 
 def resolve_from_latlng(lat: float, lng: float) -> LocationMatch:
