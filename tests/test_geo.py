@@ -64,3 +64,26 @@ def test_malformed_pincodes_are_rejected():
     assert resolve_from_pincode("1234567") is None  # too long
     assert resolve_from_pincode("012345") is None  # no real Indian PIN starts with 0
     assert resolve_from_pincode("abcdef") is None  # not digits
+
+
+def test_weak_prefix_match_is_flagged_low_confidence_not_claimed_confident():
+    # Real pincodes nowhere near any of our 72 known cities (Solapur is
+    # ~250km from Pune; Jalandhar sits between Amritsar and Ludhiana) only
+    # share 1-2 digits with their nearest known-city guess. That guess should
+    # still come back (so restaurant suggestions have *something* to anchor
+    # on), but must never be reported as a confident, serviceable match —
+    # regression coverage for a real bug: these used to come back
+    # serviceable=True despite being a coin-flip guess 100s of km off.
+    solapur = resolve_from_pincode("413001")
+    assert solapur.serviceable is False
+
+    jalandhar = resolve_from_pincode("144001")
+    assert jalandhar.serviceable is False
+
+
+def test_district_level_match_still_stays_confident():
+    # A genuine 3+ digit shared prefix (same sorting district) should still
+    # resolve confidently — only 1-2 digit matches get downgraded.
+    match = resolve_from_pincode("560103")  # Bengaluru area, not the exact known 560001
+    assert match.city == "Bengaluru"
+    assert match.serviceable is True

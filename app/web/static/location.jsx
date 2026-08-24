@@ -26,14 +26,25 @@ function LocationModal({ open, status, cities, currentCity, currentPincode, onDe
     fetch("/api/location/resolve-pincode", {
       method: "POST", headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ pincode }),
-    }).then((r) => (r.ok ? r.json() : Promise.reject(r)))
+    }).then((r) => {
+        if (r.ok) return r.json();
+        // 422 = the server actually validated this and rejected the format;
+        // anything else (500, a cold-start 502/503, a dropped connection) is
+        // a request failure, not proof the pincode is invalid — conflating
+        // the two used to tell users a perfectly valid pincode "doesn't look
+        // like a valid Indian PIN code" whenever the request merely failed.
+        return Promise.reject({ invalid: r.status === 422 });
+      })
       .then((m) => {
         if (cancelled) return;
         setPincodeMatch({ city: m.city, serviceable: m.serviceable });
         setCity(m.city);
         setQuery(m.city);
       })
-      .catch(() => { if (!cancelled) setPincodeMatch({ error: true }); });
+      .catch((err) => {
+        if (cancelled) return;
+        setPincodeMatch({ error: true, invalid: !!(err && err.invalid) });
+      });
     return () => { cancelled = true; };
   }, [pincode]); // eslint-disable-line
 
@@ -148,7 +159,10 @@ function LocationModal({ open, status, cities, currentCity, currentPincode, onDe
                 )}
                 {pincode.length === 6 && pincodeMatch && pincodeMatch.error && (
                   <div className="loc-pin-hint warn">
-                    <Icon name="alert" size={12} /> That doesn't look like a valid Indian PIN code.
+                    <Icon name="alert" size={12} />
+                    {pincodeMatch.invalid
+                      ? "That doesn't look like a valid Indian PIN code."
+                      : "Couldn't check that pincode right now — try again in a moment."}
                   </div>
                 )}
               </div>
