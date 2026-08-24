@@ -157,12 +157,19 @@ _PINCODE_RE = re.compile(r"^[1-9]\d{5}$")
 
 # Shared-prefix length with a known city's representative PIN -> an honest
 # confidence-proportional distance. India's PIN structure genuinely encodes
-# geography this way (digit 1 = postal zone, digits 1-2 = sub-zone, digits
-# 1-3 = sorting district) but we don't have a full nationwide pincode
-# database, so a longer shared prefix is a real signal, not a guess dressed
-# up as one — and it's expressed as the same distance_km/serviceable fields
-# resolve_from_latlng uses, so callers treat both resolution paths alike.
-_PREFIX_MATCH_DISTANCE_KM = {6: 0.0, 5: 2.0, 4: 8.0, 3: 20.0, 2: 120.0, 1: 260.0}
+# geography this way, but each level covers a lot more ground than it might
+# sound like: digit 1 (zone) spans several states; digits 1-2 (postal
+# circle/sub-zone) is typically a whole state or a large chunk of one; only
+# digits 1-3 (sorting district) narrows to a real city/district (tens of km).
+# Verified against real pincodes far from any of our 72 known cities (e.g.
+# Solapur, Jalandhar, Nainital) — a 1-2 digit match alone was landing on a
+# plausible-*sounding* but potentially 100s of km wrong city while still
+# being marked "serviceable". Only a 3+ digit match gets a confident,
+# serviceable distance; 1-2 digit matches deliberately exceed
+# _SERVICEABLE_RADIUS_KM below so they surface as an explicit low-confidence
+# guess (see the UI's "results may be approximate" warning) rather than a
+# silently wrong "sure thing".
+_PREFIX_MATCH_DISTANCE_KM = {6: 0.0, 5: 2.0, 4: 8.0, 3: 20.0, 2: 320.0, 1: 500.0}
 
 
 def resolve_from_pincode(pincode: str) -> LocationMatch | None:
