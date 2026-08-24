@@ -9,9 +9,11 @@ from __future__ import annotations
 
 import asyncio
 import time
+from decimal import ROUND_HALF_UP, Decimal
 
 from app.bootstrap.registry import ConnectorSpec
 from app.connectors.base import Serviceability
+from app.connectors.city_profiles import profile_for
 from app.connectors.mock_data import CATALOG, PLATFORM_OFFERS, match_catalog_keys
 from app.models import RawOffer, UserContext
 
@@ -30,16 +32,30 @@ class MockConnector:
 
     async def serviceability(self, user: UserContext) -> Serviceability:
         await asyncio.sleep(_LATENCY.get(self.name, 0.04))
+        city_profile = profile_for(user.city)
+        if self.name not in city_profile.platforms:
+            # This platform simply doesn't deliver to the selected city in the
+            # demo's coverage model — not an error, just out of area.
+            return Serviceability(serviceable=False, store_id=f"{self.name}-{user.pincode}")
+
         offers = PLATFORM_OFFERS.get(self.name, {})
         etas = [o.get("eta_minutes") for o in offers.values() if o.get("eta_minutes")]
+        baseline = min(etas) if etas else None
         return Serviceability(
             serviceable=bool(offers),
-            baseline_eta_minutes=min(etas) if etas else None,
+            baseline_eta_minutes=_scale_eta(baseline, city_profile.eta_multiplier),
             store_id=f"{self.name}-{user.pincode}",
         )
 
     async def search(self, query: str, user: UserContext) -> list[RawOffer]:
         await asyncio.sleep(_LATENCY.get(self.name, 0.04))
+        city_profile = profile_for(user.city)
+        if self.name not in city_profile.platforms:
+            # Out of this platform's delivery area for the selected city —
+            # return no offers rather than raise, same as any other "can't
+            # serve this request" case (graceful degradation).
+            return []
+
         platform_offers = PLATFORM_OFFERS.get(self.name, {})
         membership_active = bool(self.spec.membership and self.spec.membership in user.memberships)
         captured = time.time()
@@ -67,11 +83,11 @@ class MockConnector:
                     veg=item["veg"],
                     base_price=params["base_price"],
                     tax=params.get("tax", 0),
-                    delivery_fee=params.get("delivery_fee", 0),
+                    delivery_fee=_scale_fee(params.get("delivery_fee", 0), city_profile.fee_multiplier),
                     surge=params.get("surge", 0),
                     membership_discount=discount,
                     available=params.get("available", True),
-                    eta_minutes=params.get("eta_minutes"),
+                    eta_minutes=_scale_eta(params.get("eta_minutes"), city_profile.eta_multiplier),
                     rating=params.get("rating"),
                     offer_text=params.get("offer_text"),
                     store_id=f"{self.name}-{user.pincode}",
@@ -80,3 +96,15 @@ class MockConnector:
                 )
             )
         return results
+
+
+def _scale_eta(eta_minutes: int | None, multiplier: float) -> int | None:
+    if eta_minutes is None:
+        return None
+    return max(1, round(eta_minutes * multiplier))
+
+
+def _scale_fee(fee: Decimal, multiplier: Decimal) -> Decimal:
+    if not fee:
+        return Decimal("0")
+    return (Decimal(fee) * multiplier).quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
