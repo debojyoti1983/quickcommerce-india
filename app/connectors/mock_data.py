@@ -94,12 +94,12 @@ CATALOG: dict[str, dict] = {
     "mutton_biryani": {
         "name": "Mutton Biryani", "kind": ConnectorKind.FOOD,
         "unit": "1 plate", "veg": False,
-        "aliases": ["mutton biryani", "gosht biryani", "lamb biryani"],
+        "aliases": ["mutton biryani", "gosht biryani", "lamb biryani", "biryani"],
     },
     "egg_biryani": {
         "name": "Egg Biryani", "kind": ConnectorKind.FOOD,
         "unit": "1 plate", "veg": False,
-        "aliases": ["egg biryani", "anda biryani"],
+        "aliases": ["egg biryani", "anda biryani", "biryani"],
     },
     "veg_fried_rice": {
         "name": "Veg Fried Rice", "kind": ConnectorKind.FOOD,
@@ -773,13 +773,31 @@ def _tokens(text: str) -> set[str]:
 def match_catalog_keys(query: str) -> list[str]:
     """Match catalog keys against the query.
 
-    Substring match first (precise); if nothing matches, fall back to
-    significant-token overlap so near-misses like "chicken gravy" still surface
-    the chicken dishes instead of returning nothing.
+    A multi-word query names something specific — "chicken biryani" means
+    that dish, not "Chicken Curry" (shares only "chicken") or "Veg Biryani"
+    (shares only "biryani"). So a 2+ word query first tries a *covering*
+    match: does some item's own name/alias contain every one of the query's
+    words? If so, that's returned exclusively — no same-word-but-unrelated
+    dishes tacked on. Only when nothing covers the whole query (a typo, or a
+    genuinely novel combination) do we fall through to substring, then
+    significant-token-overlap, so near-misses like "chiken curry" or "chicken
+    gravy" still surface something instead of returning nothing. A single-
+    word query (e.g. "biryani", "chicken") skips straight to that broader
+    matching — there's no "which word is missing" concern with one word, and
+    browsing a whole category by one generic word is useful.
     """
     q = query.strip().lower()
     if not q:
         return []
+    qtokens = _tokens(q)
+
+    if len(qtokens) >= 2:
+        covering = [
+            key for key, item in CATALOG.items()
+            if any(qtokens <= _tokens(h) for h in _haystack(key, item))
+        ]
+        if covering:
+            return covering
 
     substring = [
         key for key, item in CATALOG.items() if any(q in h or h in q for h in _haystack(key, item))
@@ -787,7 +805,6 @@ def match_catalog_keys(query: str) -> list[str]:
     if substring:
         return substring
 
-    qtokens = _tokens(q)
     if not qtokens:
         return []
     return [

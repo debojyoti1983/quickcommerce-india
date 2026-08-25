@@ -22,11 +22,23 @@ def test_grocery_query_aggregates_multiple_platforms():
 
 
 def test_veg_only_excludes_non_veg():
+    # "chicken biryani" now names exactly Chicken Biryani (see
+    # test_exact_dish_name_matches_only_that_dish) - veg_only correctly
+    # filters that dish's offers out entirely rather than substituting an
+    # unrelated veg dish the user didn't ask for, so this resolves to no
+    # results at all.
     resp = _run("chicken biryani", UserContext(veg_only=True))
-    # veg_only must exclude every non-veg offer (e.g. Chicken Biryani), even if a
-    # veg match like "Veg Biryani" surfaces from the shared "biryani" term.
+    assert resp.results == []
     for r in resp.results:
         assert "Chicken" not in r.item_name
+        for s in r.comparison.available:
+            assert s.offer.veg is not False
+
+    # veg_only still must exclude non-veg offers on a query that resolves to
+    # more than one item (a bare category word, not a specific dish name).
+    resp2 = _run("biryani", UserContext(veg_only=True))
+    for r in resp2.results:
+        assert "Chicken" not in r.item_name and "Mutton" not in r.item_name and "Egg" not in r.item_name
         for s in r.comparison.available:
             assert s.offer.veg is not False
 
@@ -103,13 +115,38 @@ def test_specific_dish_ranks_above_a_generically_shared_word_match():
     assert resp.results[0].item_name == "Chicken Momos (6 pcs)"
 
 
-def test_related_variant_still_surfaces_as_a_secondary_match():
-    # The existing "shared dish-type term" cross-match (biryani variants)
-    # must still work — just not rank ahead of the exact match.
+def test_exact_dish_name_matches_only_that_dish():
+    # A full, specific dish name must resolve to exactly that dish - not
+    # "Chicken Curry" (shares only "chicken") or "Veg Biryani" (shares only
+    # "biryani"). Naming a specific dish should never pull in unrelated ones
+    # that merely share a single word.
     resp = _run("chicken biryani", UserContext())
     names = [r.item_name for r in resp.results]
-    assert names[0] == "Chicken Biryani"
-    assert "Veg Biryani" in names
+    assert names == ["Chicken Biryani"]
+
+    resp2 = _run("kadai paneer", UserContext())
+    assert [r.item_name for r in resp2.results] == ["Kadai Paneer"]
+
+    resp3 = _run("chicken momos", UserContext())
+    assert [r.item_name for r in resp3.results] == ["Chicken Momos (6 pcs)"]
+
+
+def test_bare_category_word_still_browses_every_variant():
+    # A single generic word (not a specific dish name) should still surface
+    # every dish in that category - this is category browsing, not naming
+    # one specific dish, so the broader match is still the right behavior.
+    resp = _run("biryani", UserContext())
+    names = {r.item_name for r in resp.results}
+    assert {"Chicken Biryani", "Veg Biryani", "Mutton Biryani", "Egg Biryani"} <= names
+
+
+def test_typo_still_falls_back_to_a_reasonable_match():
+    # A multi-word query with a typo doesn't cover any single dish's full
+    # name, so it must fall through to the broader substring/token matching
+    # instead of returning nothing.
+    resp = _run("chiken curry", UserContext())
+    assert resp.results
+    assert any(r.item_name == "Chicken Curry" for r in resp.results)
 
 
 def test_out_of_stock_surfaced():
