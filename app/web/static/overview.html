@@ -1,0 +1,340 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>QuickCommerce India — Product Overview</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,600;12..96,700;12..96,800&family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+<style>
+  *, *::before, *::after { box-sizing: border-box; }
+  html { -webkit-text-size-adjust: 100%; }
+
+  :root {
+    --bg: #FFF8EF;
+    --surface: #FFFFFF;
+    --surface-2: #FBF3E7;
+    --ink: #2A1C0E;
+    --muted: #927A57;
+    --line: #EEE0CB;
+    --primary: #EC6A1E;
+    --primary-ink: #FFFFFF;
+    --primary-soft: #FDEEE0;
+    --good: #1E9E5A;
+    --good-soft: #E4F6EC;
+    --warn: #D8553C;
+    --blue: #3B7DD8;
+    --blue-soft: #E9F0FC;
+    --shadow-sm: 0 1px 2px rgba(30,18,6,.06);
+    --shadow-md: 0 8px 24px -10px rgba(30,18,6,.18);
+    color-scheme: light dark;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #181106;
+      --surface: #221809;
+      --surface-2: #2C2010;
+      --ink: #F4E7D2;
+      --muted: #B89C76;
+      --line: #392B17;
+      --primary: #FB8B3D;
+      --primary-ink: #2A1604;
+      --primary-soft: #2E2010;
+      --good: #43C07F;
+      --good-soft: #16301F;
+      --warn: #F08163;
+      --blue: #7FA9EE;
+      --blue-soft: #1B2740;
+      --shadow-sm: 0 1px 2px rgba(0,0,0,.3);
+      --shadow-md: 0 8px 24px -10px rgba(0,0,0,.5);
+    }
+  }
+
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: "IBM Plex Sans", system-ui, sans-serif;
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+  }
+  h1, h2, h3, .display { font-family: "Bricolage Grotesque", "IBM Plex Sans", sans-serif; }
+  .mono { font-family: "IBM Plex Mono", ui-monospace, monospace; }
+  ::selection { background: var(--primary); color: var(--primary-ink); }
+  a { color: var(--primary); }
+  a:focus-visible, button:focus-visible { outline: 2px solid var(--primary); outline-offset: 2px; }
+
+  .wrap { max-width: 1000px; margin: 0 auto; padding: 0 24px; }
+  .prose { max-width: 700px; }
+
+  /* ============ masthead ============ */
+  .masthead { padding: 56px 0 40px; border-bottom: 1px solid var(--line); }
+  .eyebrow {
+    font-family: "IBM Plex Mono", monospace; font-size: 12px; font-weight: 500;
+    letter-spacing: .12em; text-transform: uppercase; color: var(--muted);
+    display: flex; align-items: center; gap: 9px; margin-bottom: 18px;
+  }
+  .dot-live { width: 7px; height: 7px; border-radius: 50%; background: var(--good); flex: none;
+    box-shadow: 0 0 0 3px var(--good-soft); }
+  .masthead h1 {
+    font-size: clamp(34px, 6vw, 56px); font-weight: 800; letter-spacing: -.02em;
+    margin: 0 0 16px; line-height: 1.02; text-wrap: balance;
+  }
+  .masthead .thesis {
+    font-size: clamp(16px, 2vw, 19px); color: var(--muted); max-width: 640px; margin: 0 0 26px;
+    text-wrap: pretty;
+  }
+  .masthead .meta {
+    display: flex; flex-wrap: wrap; gap: 8px 22px; font-size: 13.5px; color: var(--muted);
+    font-family: "IBM Plex Mono", monospace;
+  }
+  .masthead .meta a { color: var(--ink); text-decoration: none; border-bottom: 1px solid var(--primary); }
+  .masthead .meta a:hover { color: var(--primary); }
+
+  /* ============ stat strip ============ */
+  .stats {
+    display: grid; grid-template-columns: repeat(5, 1fr); gap: 1px;
+    background: var(--line); border: 1px solid var(--line); border-radius: 14px;
+    overflow: hidden; margin: 40px 0 0;
+  }
+  .stat { background: var(--surface); padding: 20px 18px; }
+  .stat .n {
+    font-family: "IBM Plex Mono", monospace; font-weight: 600; font-size: clamp(22px, 3vw, 30px);
+    color: var(--primary); font-variant-numeric: tabular-nums; letter-spacing: -.01em; line-height: 1;
+  }
+  .stat .l { font-size: 12px; color: var(--muted); margin-top: 8px; line-height: 1.35; }
+
+  /* ============ sections ============ */
+  section { padding: 52px 0; border-bottom: 1px solid var(--line); }
+  section:last-of-type { border-bottom: 0; }
+  .section-head { display: flex; align-items: baseline; gap: 18px; margin-bottom: 26px; }
+  .section-num {
+    font-family: "IBM Plex Mono", monospace; font-size: 12px; color: var(--muted);
+    letter-spacing: .1em; text-transform: uppercase; white-space: nowrap; padding-top: 6px;
+  }
+  h2 { font-size: clamp(22px, 3vw, 28px); font-weight: 700; margin: 0; letter-spacing: -.01em; text-wrap: balance; }
+  .prose p { font-size: 16px; color: var(--ink); margin: 0 0 16px; }
+  .prose p.lede { font-size: 17.5px; color: var(--muted); }
+  .prose strong { color: var(--ink); font-weight: 600; }
+
+  /* ============ capability grid ============ */
+  .cap-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 1px; background: var(--line);
+    border: 1px solid var(--line); border-radius: 14px; overflow: hidden; }
+  .cap {
+    background: var(--surface); padding: 26px 26px 22px; display: flex; flex-direction: column; gap: 10px;
+  }
+  .cap h3 { font-size: 17px; margin: 0; font-weight: 700; letter-spacing: -.005em; }
+  .cap p { font-size: 14.5px; color: var(--muted); margin: 0; line-height: 1.55; }
+  .evidence {
+    margin-top: auto; padding-top: 12px; display: flex; gap: 8px; align-items: flex-start;
+    font-family: "IBM Plex Mono", monospace; font-size: 11.5px; color: var(--blue);
+  }
+  .evidence .tag {
+    flex: none; font-weight: 600; letter-spacing: .06em; text-transform: uppercase;
+    background: var(--blue-soft); color: var(--blue); padding: 2px 7px; border-radius: 5px; margin-top: 1px;
+  }
+  .evidence span.txt { color: var(--muted); line-height: 1.5; }
+
+  /* ============ status callout ============ */
+  .status-box {
+    border: 1px solid var(--line); border-radius: 14px; background: var(--surface-2);
+    padding: 26px 28px; display: flex; gap: 18px;
+  }
+  .status-box .mark {
+    flex: none; width: 34px; height: 34px; border-radius: 10px; background: var(--primary-soft);
+    color: var(--primary); display: grid; place-items: center; font-family: "IBM Plex Mono", monospace;
+    font-weight: 600; font-size: 13px;
+  }
+  .status-box h3 { margin: 0 0 8px; font-size: 16px; }
+  .status-box p { margin: 0 0 10px; font-size: 14.5px; color: var(--muted); line-height: 1.6; }
+  .status-box p:last-child { margin-bottom: 0; }
+  .status-box code {
+    font-family: "IBM Plex Mono", monospace; font-size: 12.5px; background: var(--surface);
+    border: 1px solid var(--line); padding: 1px 6px; border-radius: 5px; color: var(--ink);
+  }
+
+  /* ============ roadmap ============ */
+  .roadmap { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; }
+  .phase { position: relative; padding-top: 22px; }
+  .phase::before {
+    content: ""; position: absolute; top: 0; left: 0; right: 0; height: 3px; border-radius: 3px;
+    background: var(--line);
+  }
+  .phase.done::before { background: var(--good); }
+  .phase.now::before { background: var(--primary); }
+  .phase .ph-label {
+    font-family: "IBM Plex Mono", monospace; font-size: 11px; letter-spacing: .08em; text-transform: uppercase;
+    font-weight: 600; margin-bottom: 8px; display: flex; align-items: center; gap: 7px;
+  }
+  .phase.done .ph-label { color: var(--good); }
+  .phase.now .ph-label { color: var(--primary); }
+  .phase.next .ph-label, .phase.later .ph-label { color: var(--muted); }
+  .phase h3 { font-size: 15.5px; margin: 0 0 8px; font-weight: 700; }
+  .phase ul { margin: 0; padding-left: 18px; font-size: 13px; color: var(--muted); line-height: 1.7; }
+  .phase li::marker { color: var(--line); }
+
+  /* ============ close ============ */
+  .close { padding: 48px 0 64px; }
+  .close .cta {
+    display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 20px;
+    background: var(--ink); color: var(--bg); border-radius: 16px; padding: 30px 32px;
+  }
+  .close .cta .l1 { font-family: "Bricolage Grotesque"; font-size: 20px; font-weight: 700; margin-bottom: 6px; }
+  .close .cta .l2 { font-size: 14px; opacity: .72; }
+  .close .cta a.btn {
+    background: var(--primary); color: var(--primary-ink); text-decoration: none; font-weight: 700;
+    padding: 12px 22px; border-radius: 11px; font-size: 14.5px; white-space: nowrap;
+    font-family: "IBM Plex Sans";
+  }
+
+  @media (max-width: 760px) {
+    .stats { grid-template-columns: repeat(2, 1fr); }
+    .cap-grid { grid-template-columns: 1fr; }
+    .roadmap { grid-template-columns: 1fr 1fr; }
+    .section-head { flex-direction: column; gap: 4px; }
+  }
+  @media (max-width: 480px) {
+    .stats { grid-template-columns: 1fr 1fr; }
+    .roadmap { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="masthead">
+    <div class="eyebrow"><span class="dot-live"></span> Live MVP · Product Overview · 25 August 2026</div>
+    <h1>QuickCommerce India</h1>
+    <p class="thesis">One search, every app, the best deal — an explainable price-and-speed comparison engine that unifies India's largest quick-commerce apps into a single, evidence-backed recommendation.</p>
+    <div class="meta">
+      <span>8 platforms aggregated</span>
+      <span>72 cities covered</span>
+      <span><a href="/">quickcommerce-india.onrender.com</a></span>
+    </div>
+  </header>
+
+  <div class="stats">
+    <div class="stat"><div class="n">8</div><div class="l">platforms compared: Swiggy, Zomato, Blinkit, Zepto, Instamart, BigBasket, Flipkart&nbsp;Minutes, Amazon&nbsp;Fresh</div></div>
+    <div class="stat"><div class="n">72</div><div class="l">cities resolved — every Indian state &amp; union territory</div></div>
+    <div class="stat"><div class="n">56</div><div class="l">catalog items — 31 dishes, 25 grocery staples</div></div>
+    <div class="stat"><div class="n">10km</div><div class="l">real geographic radius for restaurant matching</div></div>
+    <div class="stat"><div class="n">65</div><div class="l">automated tests passing on every change</div></div>
+  </div>
+
+  <section>
+    <div class="section-head"><span class="section-num">01 — The Problem</span></div>
+    <div class="prose">
+      <p class="lede">Finding the best deal in Indian quick-commerce means opening four or five apps and doing the comparison yourself.</p>
+      <p>Swiggy, Zomato, Blinkit, Zepto, Instamart, BigBasket, Flipkart Minutes and Amazon Fresh each quote a different <strong>headline</strong> price. The number that actually matters — item, tax, delivery fee, surge, minus whatever membership discount you hold — is buried a screen or two deeper on every one of them, and it changes by the minute. Shoppers either overpay by skipping the comparison, or spend real time doing it by hand.</p>
+    </div>
+  </section>
+
+  <section>
+    <div class="section-head"><span class="section-num">02 — The Product</span></div>
+    <div class="prose">
+      <p class="lede">QuickCommerce India asks once, in plain language, and compares all eight apps at the same time — on true all-in price, ETA, rating, and the offers you're actually eligible for.</p>
+    </div>
+    <div class="cap-grid">
+      <div class="cap">
+        <h3>True all-in price</h3>
+        <p>Item + tax + delivery fee + surge − membership discount, computed the same way across every platform, so the number you see is the number you'd actually pay.</p>
+        <div class="evidence"><span class="tag">Evidence</span><span class="txt">Decimal-precision pricing; aware of Swiggy One, Zomato Gold, BB Star and Prime.</span></div>
+      </div>
+      <div class="cap">
+        <h3>Location intelligence</h3>
+        <p>Detect by GPS, type any Indian pincode, or search a city by name — each resolves to a real coverage tier, not a guess.</p>
+        <div class="evidence"><span class="tag">Evidence</span><span class="txt">72 cities spanning every state &amp; UT; pincode matching keyed to India Post's real numbering structure.</span></div>
+      </div>
+      <div class="cap">
+        <h3>Restaurants that are actually nearby</h3>
+        <p>Food results name the specific restaurant, filtered to a genuine radius of the shopper's location — not just a delivery app's logo.</p>
+        <div class="evidence"><span class="tag">Evidence</span><span class="txt">Great-circle distance computed server-side, capped at 10km; abstains rather than naming somewhere too far.</span></div>
+      </div>
+      <div class="cap">
+        <h3>Search that means it</h3>
+        <p>Typing a specific dish returns that dish — not everything that happens to share one word with it.</p>
+        <div class="evidence"><span class="tag">Evidence</span><span class="txt">Full-phrase matching before any fallback; a generic word like "chicken" still browses the whole category.</span></div>
+      </div>
+      <div class="cap">
+        <h3>Explainable by design</h3>
+        <p>Every recommendation states why, cites its source, and grades its own confidence — and says so plainly when it isn't sure.</p>
+        <div class="evidence"><span class="tag">Evidence</span><span class="txt">BECAUSE / EVIDENCE / CONFIDENCE on every pick; abstains below a set confidence threshold instead of guessing.</span></div>
+      </div>
+      <div class="cap">
+        <h3>Nothing orders itself</h3>
+        <p>The assistant compares and recommends. A human always approves the actual purchase.</p>
+        <div class="evidence"><span class="tag">Evidence</span><span class="txt">Idempotency-keyed approval gate — a retry can't create a duplicate order.</span></div>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="section-head"><span class="section-num">03 — Where This Stands</span></div>
+    <div class="status-box">
+      <div class="mark">i</div>
+      <div>
+        <h3>A working MVP, honestly labeled</h3>
+        <p>The comparison engine, location intelligence, and explainability layer are fully functional and live at <code>quickcommerce-india.onrender.com</code> today. The marketplace data behind them — prices, ETAs, ratings, restaurant pairings — is simulated and clearly marked as such in the product, because none of the eight platforms publish a public pricing API to connect to yet.</p>
+        <p>What's proven is the harder part: the comparison logic, the confidence scoring, and the discipline to abstain rather than invent a number. That's the layer a real data partnership would sit on top of, largely unchanged.</p>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="section-head"><span class="section-num">04 — Roadmap</span></div>
+    <div class="roadmap">
+      <div class="phase done">
+        <div class="ph-label">● Shipped</div>
+        <h3>Comparison &amp; trust</h3>
+        <ul>
+          <li>8-platform aggregation</li>
+          <li>True all-in pricing</li>
+          <li>Evidence-backed recommendations</li>
+          <li>Human-approved ordering</li>
+        </ul>
+      </div>
+      <div class="phase now">
+        <div class="ph-label">● Shipped</div>
+        <h3>Location &amp; catalog depth</h3>
+        <ul>
+          <li>GPS, pincode &amp; city search</li>
+          <li>72-city coverage tiers</li>
+          <li>10km restaurant matching</li>
+          <li>56-item menu, exact search</li>
+        </ul>
+      </div>
+      <div class="phase next">
+        <div class="ph-label">○ Next</div>
+        <h3>Live data</h3>
+        <ul>
+          <li>Real platform partnerships</li>
+          <li>Live pricing &amp; inventory</li>
+          <li>Verified restaurant listings</li>
+        </ul>
+      </div>
+      <div class="phase later">
+        <div class="ph-label">○ Later</div>
+        <h3>Personalization</h3>
+        <ul>
+          <li>Order history &amp; reorder</li>
+          <li>Price-drop alerts</li>
+          <li>Saved addresses</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <div class="close">
+    <div class="cta">
+      <div>
+        <div class="l1">See it live</div>
+        <div class="l2">The full comparison flow is deployed and working end to end.</div>
+      </div>
+      <a class="btn" href="/">Open the app →</a>
+    </div>
+  </div>
+
+</div>
+</body>
+</html>
