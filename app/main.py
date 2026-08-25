@@ -105,6 +105,12 @@ async def index() -> FileResponse:
     return FileResponse(str(_STATIC_DIR / "index.html"))
 
 
+@app.get("/overview", response_class=HTMLResponse)
+async def overview() -> FileResponse:
+    # Static, standalone product overview page — no login/account needed to view.
+    return FileResponse(str(_STATIC_DIR / "overview.html"))
+
+
 @app.get("/healthz")
 async def healthz() -> dict:
     settings = get_settings()
